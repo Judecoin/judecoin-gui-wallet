@@ -1,0 +1,39 @@
+name: "Setup and build"
+description: "Setup and build"
+runs:
+  using: "composite"
+  steps:
+    - name: Install node
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: ".nvmrc"
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    # Not having this will break the windows build because the PATH won't be set by msbuild.
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v2
+      if: runner.os == 'Windows'
+
+    - name: Download Judecoin core binaries for Windows
+      shell: bash
+      if: runner.os == 'Windows'
+      run: ./tools/download-judecoin-files.sh https://github.com/Judecoin/judecoin/releases/download/v3.2.0/judecoin-win-x64-v3.2.0.zip
+
+    # Judecoin does not currently publish a macOS core archive. The release
+    # workflow must stage native macOS binaries before invoking this action.
+    - name: Check Judecoin core binaries for macOS
+      shell: bash
+      if: runner.os == 'macOS'
+      run: test -x bin/judecoind && test -x bin/judecoin-wallet-rpc
+
+    - name: Download Judecoin core binaries for Linux
+      shell: bash
+      if: runner.os == 'Linux'
+      run: ./tools/download-judecoin-files.sh https://github.com/Judecoin/judecoin/releases/download/v3.2.0/judecoin-linux-x64-v3.2.0.tar.bz2
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
