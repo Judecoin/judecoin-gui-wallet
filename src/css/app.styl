@@ -1,0 +1,885 @@
+// app global css
+@import 'quasar.variables'
+@import 'themes'
+@import 'flags'
+
+@font-face {
+    font-family: 'RobotoMono-Light';
+    src: url(themes/RobotoMono-Light.ttf)
+}
+
+body {
+    // >=600 so CJK (YaHei has no 500 face) gets synthetic bold too
+    font-weight: 600;
+}
+
+// Frameless window: the titlebar's 36px -webkit-app-region drag strip keeps
+// swallowing clicks on maximized dialogs that cover it (settings tabs etc.);
+// dialog content must carve itself out of the drag region.
+.q-dialog__inner > * {
+    -webkit-app-region: no-drag;
+}
+
+// Startup/welcome/quit splash: clip the theme-specific looping videos to the
+// circular artwork so their black/white backdrops blend into the page
+.splash-logo {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+::selection {
+    background: var(--jude-selection);
+}
+::-moz-selection {
+    background: var(--jude-selection);
+}
+
+* {
+    scrollbar-track-color: var(--jude-scrollbar-track);
+    scrollbar-arrow-color: var(--jude-scrollbar-track);
+    &::-webkit-scrollbar-corner { background-color: var(--jude-scrollbar-track);}
+    &::-webkit-scrollbar-track-piece { background-color: var(--jude-scrollbar-track);}
+
+    scrollbar-face-color: var(--jude-scrollbar-thumb);
+    scrollbar-base-color: var(--jude-scrollbar-thumb);
+    scrollbar-3dlight-color: var(--jude-scrollbar-thumb);
+    scrollbar-highlight-color: var(--jude-scrollbar-thumb);
+    scrollbar-shadow-color: var(--jude-scrollbar-thumb);
+    scrollbar-dark-shadow-color: var(--jude-scrollbar-thumb);
+    &::-webkit-scrollbar { width: 8px; height: 8px;}
+    &::-webkit-scrollbar-button {  background-color: var(--jude-scrollbar-thumb); height:0; width: 0; }
+    &::-webkit-scrollbar-track {  background-color: var(--jude-scrollbar-thumb);}
+    &::-webkit-scrollbar-thumb { height: 50px; background-color: var(--jude-scrollbar-thumb); border-radius: 3px;}
+    &::-webkit-resizer { background-color: var(--jude-scrollbar-thumb);}
+}
+
+
+h1,h2,h3,h4,h5,h6,
+img,
+.q-list-header,
+.q-header,
+.q-menu .q-item-label,
+.q-list-link .q-item,
+.q-checkbox .q-option-label,
+.infoBox .text,
+.modal-header,
+footer,
+{
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+.monospace {
+    font-family: 'RobotoMono-Light', monospace
+}
+
+
+.break-all {
+    word-break: break-all
+}
+
+.ellipsis {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.q-field {
+    margin: 20px 0;
+
+    &.q-ma-none {
+        margin: 0;
+    }
+}
+
+.text-area-judecoin {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.q-inner-loading {
+    z-index: 2;
+}
+
+.q-btn {
+    text-transform: none;
+}
+
+// At bottom of forms
+.submit-button {
+    margin-top: 6px;
+}
+
+.layout-padding {
+    padding: 15px 16px !important;
+}
+
+.advanced-options-label .q-item-side-right {
+    margin: 0;
+    text-align: left;
+}
+
+.q-layout, .app-content {
+    background: var(--jude-bg);
+    color: var(--jude-text);
+}
+
+.q-header {
+    background: var(--jude-bg-header);
+    color: var(--jude-text);
+    box-shadow: none;
+    border-bottom: 1px solid var(--jude-border);
+
+    // header that only hosts the custom window titlebar (titlebar.vue draws its own border)
+    &.titlebar-only {
+        border-bottom: none;
+    }
+
+    &.shift-title {
+        .q-toolbar {
+            text-align: center;
+
+            .q-toolbar-title {
+                font-size: 16px;
+                line-height: 48px;
+                font-weight: 600;
+            }
+        }
+    }
+
+    .q-toolbar-inverted {
+        background: var(--jude-bg-header);
+        padding-top: 0;
+    }
+
+    .q-tabs {
+        padding-left: 50px;
+
+        .q-tabs-head {
+            padding: 0;
+            background: none;
+        }
+
+        .q-tab {
+            text-transform: none;
+
+            // &:hover {
+            //     background-color: rgba(12,12,12,0.15)
+            // }
+
+            .q-icon {
+                font-size: 22px;
+            }
+
+        }
+
+    }
+}
+
+.q-layout-page {
+    min-height: 0 !important;
+}
+
+.infoBox {
+    height: 75px;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+    margin: 10px 0;
+
+    .infoBoxIcon {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: 64px;
+        color: var(--jude-text-dim);
+
+        svg {
+            width: 60px;
+            height: 60px;
+        }
+    }
+
+    .infoBoxContent {
+        display: inline-block;
+
+        .text {
+            font-size: 14px;
+            margin-top: 8px;
+            color: var(--jude-text);
+        }
+
+        .value {
+            font-size: 24px;
+            margin-top: 4px;
+            font-weight: 600;
+            color: var(--jude-text);
+        }
+    }
+}
+
+.q-checkbox {
+    color: var(--jude-text)
+}
+
+.q-loading + .modal {
+    z-index: 9999 !important;
+}
+
+.modal-scroll {
+    max-height: 230px;
+    max-width: 640px;
+    word-break: break-word;
+}
+
+.q-footer.status-footer {
+    background: var(--jude-bg-header);
+    color: var(--jude-text-dim);
+    border-top: 1px solid var(--jude-border);
+    padding-top: 2px;
+    box-shadow: none;
+    font-size: 12px;
+
+    .status-line {
+        padding: 8px;
+        margin-bottom: 5px;
+
+        .status {
+            flex: 1;
+            span {
+                margin-right: 4px;
+            }
+
+            .status-text {
+                font-weight: bold;
+            }
+
+            .ready {
+              color: var(--jude-positive);
+            }
+
+            .scanning, .syncing {
+                color: var(--jude-warning);
+            }
+
+            .updateRequired {
+                color: var(--jude-negative);
+            }
+        }
+
+        div {
+            padding: 0 8px;
+        }
+    }
+
+    .status-bars {
+
+        div {
+            height: 3px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            -webkit-transition: width 0.5s ease-out;
+            transition: width 0.5s ease-out;
+        }
+
+        div:first-child {
+            // TODO: should first and last child be different, where even is this?
+            background-color: var(--jude-positive);
+        }
+
+        div:last-child {
+            background-color: var(--jude-positive);
+        }
+    }
+
+    .status-bars.syncing, .status-bars.scanning {
+        div:first-child {
+            background-color: var(--jude-warning);
+        }
+
+        div:last-child {
+            background-color: var(--jude-warning);
+        }
+    }
+
+    .status-bars.updateRequired {
+        div:first-child {
+            color: var(--jude-negative);
+            background-color: var(--jude-negative);
+        }
+
+        div:last-child {
+            color: var(--jude-negative);
+            background-color: var(--jude-negative);
+        }
+    }
+
+}
+
+.tx-list {
+
+    .meta {
+        text-align:right;
+    }
+
+    .q-item.tx-in,
+    .q-item.tx-pool,
+    .q-item.tx-miner,
+    .q-item.tx-snode,
+    .q-item.tx-gov {
+        .amount span {
+            color: var(--jude-text);
+            &:before {
+                content: "+";
+                color: var(--jude-text);
+            }
+        }
+    }
+
+    .q-item.tx-stake {
+        .amount span {
+            color: var(--jude-warning);
+        }
+    }
+
+    .q-item.tx-out,
+    .q-item.tx-pending {
+        .amount span {
+            // color: white;
+            &:before {
+                content: "-";
+                font-weight: bold;
+                // color: white;
+            }
+        }
+    }
+
+    .q-item.tx-failed {
+        .amount span {
+            color: var(--jude-negative);
+        }
+    }
+}
+
+.q-list-dark .q-item,
+.q-item-dark .q-item,
+.q-list-header {
+    color: var(--jude-text-dim);
+}
+
+.q-stepper-tab.step-waiting,
+.q-stepper-step-content{
+    color: var(--jude-text-dim);
+}
+
+.q-menu {
+    background: var(--jude-bg);
+    color: var(--jude-text) !important;
+
+    * {
+        color: var(--jude-text);
+    }
+
+    .q-list-separator > .q-item-division + .q-item-division, .q-item-division + .q-separator {
+        border-top: 1px solid var(--jude-border);
+    }
+}
+
+.menu-list {
+
+    background: var(--jude-bg);
+
+    .q-item * {
+        color: var(--jude-text);
+    }
+}
+
+.context-menu-list {
+  min-width: 150px;
+  max-height: 300px;
+}
+
+.confirm-tx-card {
+  width: 450px;
+  max-width: 450x;
+
+  // q-card stays white by default; follow the theme so dark mode doesn't
+  // render near-white text on a white card (unreadable)
+  background: var(--jude-bg-alt) !important;
+  color: var(--jude-text) !important;
+
+  .confirm-list {
+    .q-item {
+      max-height: 100%;
+      margin-top: 0;
+      margin-bottom: 4px;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  .label {
+    color: var(--jude-positive);
+    padding-right: 6px;
+  }
+  .value {
+    color: var(--jude-text);
+    font-weight: 600;
+  }
+  .address-value {
+    word-break: break-word;
+    color: var(--jude-text);
+    font-weight: 600;
+  }
+
+  .confirm-send-btn {
+    color: var(--jude-text-inverse);
+    background: var(--jude-accent);
+  }
+}
+
+
+.header-popover {
+    background: var(--jude-bg);
+    max-width: 250px !important;
+}
+
+.modal.minimized {
+    .q-input {
+        .q-input-target {
+            color: var(--jude-text-dim);
+        }
+        &.q-if:hover:before {
+            color: var(--jude-text-dim);
+        }
+    }
+}
+
+.modal {
+    color: var(--jude-text-dim);
+
+    .modal-header {
+        margin-top: 6px;
+        margin-left: 24px;
+        text-align: left;
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    .q-header {
+
+        .q-toolbar {
+            &>* {
+                color: var(--jude-text-dim);
+            }
+        }
+    }
+
+}
+
+.q-toolbar {
+    background-color: var(--jude-bg-header);
+}
+
+.header {
+    color: var(--jude-text);
+}
+
+.detail-page {
+    color: var(--jude-text);
+}
+
+.q-radio {
+    color: var(--jude-text);
+    svg {
+        color: var(--jude-text);
+    }
+}
+
+.qr-code-modal {
+  padding: "25px";
+  color: white;
+
+  .qr-code-card {
+    background-color: white;
+  }
+}
+
+.judecoin-light-teal {
+    background: var(--jude-accent);
+    color: var(--jude-text-inverse);
+}
+
+.judecoin-navy {
+    background: var(--jude-balance-gradient);
+    color: var(--jude-balance-text);
+    border: 1px solid var(--jude-balance-border);
+}
+
+.judecoin-teal {
+    background: var(--jude-accent2);
+    color: var(--jude-text-inverse);
+}
+
+.startup-icons {
+    .solid {
+        color: var(--jude-accent2);
+        g,path {
+            fill: var(--jude-accent2);
+        }
+    }
+}
+
+.hr-separator {
+    height: 2px;
+    background: var(--jude-border);
+    opacity: 0.4;
+}
+
+// old top navigation removed 2026-07-11 — replaced by the Monero-style
+// left sidebar in layouts/wallet/main.vue
+
+.truncate-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.wallet-list {
+    .q-item-label {
+        color: var(--jude-text-inverse);
+    }
+
+    .q-item {
+        background: var(--jude-bg-alt);
+        .wallet-icon {
+            color: var(--jude-accent2);
+            g,path {
+                fill: var(--jude-accent2);
+            }
+        }
+    }
+
+    .q-item:hover, .q-item.selected {
+        background: var(--jude-accent-hover) !important;
+
+        .wallet-icon {
+            color: var(--jude-accent2);
+            g,path {
+                fill: var(--jude-accent2);
+            }
+        }
+
+        .q-icon {
+            color: var(--jude-text-inverse);
+        }
+    }
+}
+
+.wallet-settings {
+  .q-btn {
+    color: var(--jude-text);
+  }
+}
+
+.receive {
+
+    .list-header {
+        color: var(--jude-text);
+    }
+
+    .q-separator-component {
+        background-color: var(--jude-border);
+        opacity: 0.4;
+    }
+
+    .primary-address {
+        background: var(--jude-accent) !important;
+        border: none !important;
+
+        .q-item, .q-item-side {
+            color: var(--jude-text-inverse);
+
+            .text-caption {
+                color: var(--jude-text-inverse);
+            }
+        }
+
+        .q-btn {
+            color: var(--jude-text-inverse);
+        }
+    }
+
+    .primary-address:hover {
+        background: var(--jude-accent-hover) !important;
+    }
+
+}
+
+.judecoin-list {
+    .judecoin-list-item {
+        background: var(--jude-bg-alt);
+        -webkit-transition: background-color 0.2s ease-in;
+        transition: background-color 0.2s ease-in;
+
+        font-size: 16px;
+        color: var(--jude-text);
+        padding-top: 6px;
+        padding-bottom: 6px;
+
+        margin: 0 16px;
+        border: 1px solid var(--jude-border);
+        border-radius: 4px;
+
+        + .judecoin-list-item {
+            margin-top: 10px;
+        }
+    }
+
+    .text-caption {
+        color: var(--jude-text);
+    }
+
+    .judecoin-list-item:hover {
+        background: var(--jude-bg-hover);
+        cursor: pointer;
+
+    }
+
+}
+
+.record-type-title {
+  font-weight: bold;
+  margin-bottom: 40px;
+  padding-bottom: 40px;
+  color: var(--jude-text);
+}
+
+.records-group {
+  padding-bottom: 40px;
+}
+
+.service-node-list {
+    .q-item {
+        cursor: pointer;
+        color: var(--jude-text);
+        background: var(--jude-bg-alt);
+        -webkit-transition: background-color 0.2s ease-in;
+        transition: background-color 0.2s ease-in;
+
+        border: 1px solid var(--jude-border);
+        border-radius: 4px;
+
+        + .q-item {
+            margin-top: 10px;
+        }
+
+        .contrib-amounts {
+            color: var(--jude-text);
+        }
+    }
+
+    .q-item-label {
+        color: var(--jude-text);
+    }
+
+    .fee {
+        color: var(--jude-text);
+    }
+
+    .q-item:hover {
+        background: var(--jude-bg-hover);
+    }
+
+}
+
+.lokinet-expiration {
+  width: 180px;
+}
+
+.ons-record-list {
+  .q-item {
+    cursor: pointer;
+    color: var(--jude-text);
+    -webkit-transition: background-color 0.2s ease-in;
+    transition: background-color 0.2s ease-in;
+
+    border: 1px solid var(--jude-border);
+    border-radius: 4px;
+
+    .height {
+      color: var(--jude-text);
+    }
+
+    // we don't want to select button text (also a span) as well
+    // this is the height text
+    div > span {
+      color: var(--jude-text);
+    }
+
+    + .q-item {
+      margin-top: 10px;
+    }
+  }
+
+  .q-item:hover {
+    background: var(--jude-bg-hover);
+  }
+}
+.update-renew-buttons {
+  .q-btn:not(:first-child) {
+    margin-left: 8px;
+  }
+}
+
+.tx-list {
+    .transaction .amount,
+    .transaction .txid {
+            border-left: 1px solid var(--jude-border-light);
+    }
+}
+
+.tab-desc {
+    color: var(--jude-text);
+    font-style: normal;
+    b {
+        color: var(--jude-accent2);
+        font-style: italic;
+    }
+}
+
+.judecoin-field {
+    .content {
+        border: 1px solid var(--jude-border);
+        background: var(--jude-bg-input);
+        -webkit-transition: background-color 0.2s ease-in, border-color 0.2s ease-in;
+        transition: background-color 0.2s ease-in, border-color 0.2s ease-in;
+    }
+
+    &:not(.disable):not(.disable-hover) {
+        .content:hover {
+            background: var(--jude-bg-hover);
+        }
+    }
+
+    &.disable {
+        .content {
+            border-color: var(--jude-border-light) !important;
+        }
+    }
+
+    .content.error {
+        border-color: red;
+    }
+
+    .label {
+        color: var(--jude-text);
+
+        .optional {
+            color: var(--jude-text-muted);
+        }
+    }
+}
+
+.welcome {
+    .q-footer {
+        background: var(--jude-bg-alt)
+    }
+}
+
+.welcome-container {
+    color: var(--jude-text);
+}
+
+.address-book, .address-header {
+    .q-item-label, .header {
+        color: var(--jude-text-inverse);
+    }
+}
+
+.prove-transaction {
+    .signature {
+        background: var(--jude-bg-overlay);
+        border: var(--jude-border) 1px solid;
+        border-radius: 2px;
+        color: var(--jude-text-dim);
+    }
+}
+
+.signature-dialog {
+    color: var(--jude-text);
+}
+
+.check-transaction {
+    .good {
+        color: var(--jude-positive);
+    }
+
+    .bad {
+        color: var(--jude-negative);
+    }
+}
+
+.check-transaction, .prove-transaction {
+    .title {
+        color: var(--jude-text-dim);
+        font-size: 14px;
+    }
+}
+
+.serviceNodeDetails {
+    .address {
+        color: var(--jude-text-inverse);
+    }
+    .name {
+        color: var(--jude-text-muted);
+    }
+}
+
+.non-selectable {
+    color: var(--jude-text-muted);
+}
+
+.created {
+    color: var(--jude-text);
+
+  .wallet h6 {
+    text-align: center;
+  }
+
+  .address {
+    text-align: center;
+    word-break: break-all;
+  }
+
+  .seed-box {
+    border: 1px solid var(--jude-border);
+    border-radius: 3px;
+    margin: 16px;
+    padding: 16px;
+
+    div,
+    h6 {
+      text-align: center;
+    }
+
+    .seed {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .warning {
+      color: var(--jude-warning);
+    }
+  }
+  h6 {
+    font-size: 18px;
+    margin: 8px 0;
+    font-weight: 450;
+  }
+  .advanced-options-label {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
