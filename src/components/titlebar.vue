@@ -147,8 +147,6 @@ export default {
       });
     },
     logout() {
-      // Same restart flow as the old MainMenu switchWallet — wallet-rpc long
-      // polling prevents an in-session wallet switch (upstream workaround)
       if (this.isRPCSyncing) {
         this.$gateway.confirmClose(
           this.$t("dialog.switchWallet.restartMessage"),

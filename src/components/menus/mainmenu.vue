@@ -26,7 +26,6 @@
       </q-menu>
     </q-btn>
     <SettingsModal ref="settingsModal" />
-    <!-- TODO: Move this to it's own component -->
     <q-dialog ref="aboutModal" minimized>
       <div class="about-modal">
         <img
@@ -105,40 +104,10 @@ export default {
         return;
       }
 
-      // TODO: Remove this in hardfork 16
-      // This is a temporary work around for the issue where wallet rpc hangs after closing a wallet due to long polling still being active
       this.$gateway.confirmClose(
         this.$t("dialog.switchWallet.restartWalletMessage"),
         true
       );
-
-      // Allow switching normally because rpc won't be blocked
-      // NB: If this is added back, must use the quasar v1 APIs
-      /*
-      this.$q
-        .dialog({
-          title: this.$t("dialog.switchWallet.title"),
-          message: this.$t("dialog.switchWallet.closeMessage"),
-          ok: {
-            label: this.$t("dialog.buttons.ok")
-          },
-          cancel: {
-            flat: true,
-            label: this.$t("dialog.buttons.cancel"),
-            color: this.theme == "dark" ? "white" : "dark"
-          }
-        })
-        .then(() => {
-          this.$router.replace({ path: "/wallet-select" });
-          this.$gateway.send("wallet", "close_wallet");
-          setTimeout(() => {
-            // short delay to prevent wallet data reaching the
-            // websocket moments after we close and reset data
-            this.$store.dispatch("gateway/resetWalletData");
-          }, 250);
-        })
-        .catch(() => {});
-       */
     },
     exit() {
       this.$gateway.confirmClose(this.$t("dialog.exit.message"));

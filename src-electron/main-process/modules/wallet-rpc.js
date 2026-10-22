@@ -345,7 +345,6 @@ export class WalletRPC {
         break;
 
       case "restore_view_wallet":
-        // TODO: Decide if we want this for Judecoin
         this.restoreViewWallet(
           params.name,
           params.password,

@@ -246,7 +246,6 @@ export default {
         fee: 0,
         height: 0,
         note: "",
-        // deprecated, but leave for older txs
         payment_id: "",
         subaddr_index: { major: 0, minor: 0 },
         timestamp: 0,

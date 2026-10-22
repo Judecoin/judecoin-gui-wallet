@@ -170,7 +170,6 @@ export class Daemon {
         args.push("--confirm-external-bind");
       }
 
-      // TODO: Check if we need to push this command for staging too
       if (daemon.type === "local_remote" && net_type === "mainnet") {
         args.push(
           "--bootstrap-daemon-address",

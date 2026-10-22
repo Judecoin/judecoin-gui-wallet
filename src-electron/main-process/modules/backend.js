@@ -435,8 +435,6 @@ export class Backend {
     }
   }
   async checkVersion() {
-    // Disabled until Jude publishes signed update metadata from an official
-    // origin. Never inherit update decisions from an unrelated repository.
     this.send("set_update_required", false);
   }
 
