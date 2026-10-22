@@ -218,6 +218,8 @@ export default {
       title: "Sblocca nodo di servizio",
       confirmTitle: "Conferma sblocco",
       message: "Vuoi sbloccare il nodo di servizio?",
+      confirmMessage:
+        "Stai richiedendo lo sblocco di questa quota in un nodo condiviso. Il nodo di servizio verrà programmato per la disattivazione. Continuerai a ricevere ricompense fino alla scadenza del nodo. Vuoi continuare?",
       ok: "SBLOCCA"
     },
     unlockServiceNodeWarning: {
@@ -374,6 +376,7 @@ export default {
       signatureCopied: "Firma copiata negli appunti",
       signatureVerified: "Firma verificata",
       stakeSuccess: "Staking effettuato con successo",
+      unlockServiceNodeSuccess: "Nodo di servizio sbloccato correttamente",
       transactionNotesSaved: "Note transazione salvate",
       walletCopied: "Indirizzo portafoglio copiato negli appunti"
     },
@@ -551,12 +554,12 @@ export default {
     hardwareWallet: "Portafoglio hardware",
     hardwareWallets: "Portafogli hardware",
     loadingSettings: "Caricamento impostazioni",
-    judecoinBalance: "Saldo",
+    judeBalance: "Saldo",
     lokinetNameDescription:
       "Acquista o aggiorna un nome su Lokinet. Se acquisti un nome potrebbe essere necessario un minuto o due prima che appaia nell'elenco. Per saperne di più su Lokinet visita: ",
-    judecoinAccumulatedRewards: "Ricompense accumulate",
-    judecoinUnlockedBalance: "Saldo sbloccato",
-    judecoinUnlockedShort: "Sbloccato",
+    judeAccumulatedRewards: "Ricompense accumulate",
+    judeUnlockedBalance: "Saldo sbloccato",
+    judeUnlockedShort: "Sbloccato",
     me: "Io",
     noTransactionsFound: "Nessuna transazione trovata",
     notes: "Note",
@@ -586,17 +589,25 @@ export default {
     saveToAddressBook: "Salva nella rubrica",
     seedWords: "Parole seed",
     selectLanguage: "Seleziona lingua",
-    registrationStakingMigrationJudecoinToSessionToken:
+    registrationStakingMigrationJudeToSessionToken:
       "La registrazione e lo staking in nuovi Nodi di Servizio sono disabilitati a causa della migrazione in corso da Jude a Session Token. Leggi di più qui: ",
     serviceNodeContributionDescription:
-      "Lo staking contribuisce alla sicurezza della rete Judecoin. Per il tuo contributo, guadagni JUDE. Una volta effettuato lo staking, dovrai attendere 180 giorni per sbloccare i tuoi JUDE. Per saperne di più sullo staking, visita il",
+      "Lo staking contribuisce alla sicurezza della rete Judecoin. Per il tuo contributo, guadagni JUDE. Per saperne di più sullo staking, visita il",
     serviceNodeRegistrationDescription:
       'Inserisci il comando {registerCommand} prodotto dal daemon che si sta registrando per diventare un Nodo di Servizio utilizzando il comando "{prepareCommand}"',
     serviceNodeStartStakingDescription:
       "Per iniziare lo staking, visita la scheda Staking",
     noServiceNodesCurrentlyAvailable:
       "Attualmente non ci sono nodi di servizio disponibili per il contributo",
+    serviceNodeStatus: {
+      active: "Attivo",
+      decommissioned: "Temporaneamente disattivato",
+      unlocking: "Sblocco in corso",
+      awaitingContributions: "In attesa di contributi",
+      deregistered: "Deregistrato"
+    },
     serviceNodeDetails: {
+      status: "Stato",
       contributors: "Contributori",
       lastRewardBlockHeight: "Altezza blocco ultima ricompensa",
       lastUptimeProof: "Ultima prova di attività",
@@ -632,6 +643,7 @@ export default {
     transactionConfirmed: "confermata",
     transactions: {
       amount: "Importo",
+      confirmations: "Conferme",
       description: "Transazione {type}",
       fee: "Commissione",
       paidBySender: "pagata dal mittente",
@@ -646,8 +658,8 @@ export default {
         pending: "In sospeso",
         pendingIncoming: "In entrata in sospeso",
         pendingOutgoing: "In uscita in sospeso",
-        miner: "Miner",
-        serviceNode: "Nodo di Servizio",
+        miner: "Ricompensa del blocco",
+        serviceNode: "Ricompensa del blocco",
         governance: "Governance",
         stake: "Stake",
         failed: "Non riuscita"

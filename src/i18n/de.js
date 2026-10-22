@@ -178,6 +178,8 @@ export default {
       title: "Unlock Service Node",
       confirmTitle: "Unlock bestätigen",
       message: "Möchtest du den Service Node „unlocken“?",
+      confirmMessage:
+        "Sie beantragen die Entsperrung dieses Einsatzes in einem gemeinsam genutzten Service Node. Dadurch wird die Deaktivierung des Service Nodes geplant. Bis zum Ablauf des Service Nodes erhalten Sie weiterhin Belohnungen. Möchten Sie fortfahren?",
       ok: "UNLOCK"
     },
     unlockServiceNodeWarning: {
@@ -301,6 +303,7 @@ export default {
       sendSuccess: "Transaktion erfolgreich gesendet",
       signatureCopied: "Signature copied to clipboard",
       stakeSuccess: "Staking erfolgreich",
+      unlockServiceNodeSuccess: "Service Node erfolgreich entsperrt",
       transactionNotesSaved: "Notizen zur Transaktion gesichert"
     },
     errors: {
@@ -435,9 +438,9 @@ export default {
     destinationUnknown: "Ziel unbekannt",
     editAddressBookEntry: "Adressbucheintrag bearbeiten",
     loadingSettings: "Einstellungen werden geladen",
-    judecoinBalance: "Guthaben",
-    judecoinUnlockedBalance: "frei verfügbares Guthaben",
-    judecoinUnlockedShort: "frei verfügbar",
+    judeBalance: "Guthaben",
+    judeUnlockedBalance: "frei verfügbares Guthaben",
+    judeUnlockedShort: "frei verfügbar",
     noTransactionsFound: "Keine Transaktionen gefunden",
     notes: "Notizen",
     numberOfUnspentOutputs: "Anzahl der unspent outputs",
@@ -482,6 +485,7 @@ export default {
     transactionConfirmed: "Transaktion bestätigt",
     transactions: {
       amount: "Betrag",
+      confirmations: "Bestätigungen",
       description: "{type} Transaktion",
       fee: "Gebühr",
       paidBySender: "Vom Absender bezahlt",
@@ -496,8 +500,8 @@ export default {
         pending: "Ausstehend",
         pendingIncoming: "Ausstehend eingehend",
         pendingOutgoing: "Ausstehend ausgehend",
-        miner: "Miner",
-        serviceNode: "Service Node",
+        miner: "Blockbelohnung",
+        serviceNode: "Blockbelohnung",
         governance: "Governance",
         stake: "Stake",
         failed: "Fehlgeschlagen"

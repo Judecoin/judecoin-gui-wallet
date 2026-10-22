@@ -136,14 +136,15 @@ export default {
 
 <style lang="scss">
 .sidebar-status {
-  padding: 12px 16px 16px;
+  padding: clamp(10px, 1vw, 16px) clamp(14px, 1.2vw, 20px)
+    clamp(12px, 1.2vw, 18px);
 
   .sync-block {
     margin-bottom: 10px;
 
     .sync-label {
-      font-size: 13px;
-      font-weight: 700;
+      font-size: clamp(15px, 0.95vw, 18px);
+      font-weight: 600;
       color: var(--jude-text);
       margin-bottom: 5px;
     }
@@ -173,14 +174,31 @@ export default {
     }
 
     .caption {
-      font-size: 11px;
+      font-size: clamp(14px, 0.85vw, 16px);
+      font-weight: 500;
       color: var(--jude-text-dim);
     }
 
     .value {
-      font-size: 15px;
-      font-weight: 600;
+      font-size: clamp(17px, 1.05vw, 20px);
+      font-weight: 700;
       color: var(--jude-text);
+    }
+  }
+
+  @media (max-width: 1200px) {
+    .sync-block .sync-label {
+      font-size: 14px;
+    }
+
+    .network-status {
+      .caption {
+        font-size: 13px;
+      }
+
+      .value {
+        font-size: 16px;
+      }
     }
   }
 }

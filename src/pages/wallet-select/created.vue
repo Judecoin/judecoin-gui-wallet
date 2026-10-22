@@ -114,7 +114,7 @@
 </template>
 
 <script>
-const { clipboard } = require("electron");
+import { clipboard } from "src/electron-api";
 import { mapState } from "vuex";
 export default {
   computed: mapState({
@@ -140,12 +140,10 @@ export default {
     },
     copyPrivateKey(type, event) {
       event.stopPropagation();
-      for (let i = 0; i < event.path.length; i++) {
-        if (event.path[i].tagName == "BUTTON") {
-          event.path[i].blur();
-          break;
-        }
-      }
+      const eventPath =
+        typeof event.composedPath === "function" ? event.composedPath() : [];
+      const button = eventPath.find(item => item && item.tagName === "BUTTON");
+      if (button && typeof button.blur === "function") button.blur();
 
       if (this.secret[type] == null) {
         this.$q.notify({

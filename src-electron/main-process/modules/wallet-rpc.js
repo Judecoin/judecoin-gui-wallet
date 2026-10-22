@@ -1,6 +1,9 @@
 import child_process from "child_process";
 
-const request = require("request-promise");
+// Resolve the concrete CommonJS entry at build time. Electron 11's bundled
+// Node.js cannot reliably resolve modern package "exports" from app.asar on
+// Windows.
+const axios = require("../../../node_modules/axios/dist/node/axios.cjs");
 const queue = require("promise-queue");
 const http = require("http");
 const os = require("os");
@@ -8,6 +11,32 @@ const fs = require("fs-extra");
 const path = require("upath");
 const crypto = require("crypto");
 const portscanner = require("portscanner");
+const { isSafeWalletName } = require("./wallet-name");
+const { normalizeUserFacingPayload } = require("./user-facing-brand");
+const {
+  WALLET_RPC_START_TIMEOUT,
+  rpcErrorCause,
+  startupTimedOut
+} = require("./rpc-safety");
+const {
+  reconcileDeregisteredStakes
+} = require("../../../src/utils/service-node-status");
+const {
+  canUnlockStatus,
+  unlockResultStatus
+} = require("./service-node-unlock-status");
+const {
+  normalizeTransactionType
+} = require("../../../src/utils/transaction-type");
+
+const WALLET_NAME_METHODS = new Set([
+  "create_wallet",
+  "restore_wallet",
+  "restore_view_wallet",
+  "restore_wallet_from_keys",
+  "import_wallet",
+  "open_wallet"
+]);
 
 export class WalletRPC {
   constructor(backend) {
@@ -32,10 +61,12 @@ export class WalletRPC {
     this.isRPCSyncing = false;
     this.dirs = null;
     this.last_height_send_time = Date.now();
+    this.transactionRefreshInFlight = false;
 
     // save a pending tx here, so we don't have to send the
     // whole thing to the renderer
     this.pending_tx = null;
+    this.txDestinations = {};
 
     // A mapping of name => type
     this.purchasedNames = {};
@@ -212,9 +243,19 @@ export class WalletRPC {
                 }
               });
 
-              // To let caller know when the wallet is ready
+              const startedAt = Date.now();
+              let checking = false;
               let intrvl = setInterval(() => {
-                this.sendRPC("get_languages").then(data => {
+                if (startupTimedOut(startedAt, WALLET_RPC_START_TIMEOUT)) {
+                  clearInterval(intrvl);
+                  if (this.walletRPCProcess) this.walletRPCProcess.kill();
+                  this.walletRPCProcess = null;
+                  reject(new Error("Timed out starting wallet RPC"));
+                  return;
+                }
+                if (checking) return;
+                checking = true;
+                this.sendRPC("get_languages", {}, 5000).then(data => {
                   if (!data.hasOwnProperty("error")) {
                     clearInterval(intrvl);
                     resolve();
@@ -232,6 +273,7 @@ export class WalletRPC {
                       reject(new Error("Could not connect to wallet RPC"));
                     }
                   }
+                  checking = false;
                 });
               }, 1000);
             } else {
@@ -244,6 +286,16 @@ export class WalletRPC {
 
   async handle(data) {
     let params = data.data;
+
+    if (
+      WALLET_NAME_METHODS.has(data.method) &&
+      !isSafeWalletName(params.name)
+    ) {
+      this.sendGateway("set_wallet_error", {
+        status: { code: -1, i18n: "notification.errors.enterWalletName" }
+      });
+      return;
+    }
 
     switch (data.method) {
       case "has_password":
@@ -293,7 +345,6 @@ export class WalletRPC {
         break;
 
       case "restore_view_wallet":
-        // TODO: Decide if we want this for Judecoin
         this.restoreViewWallet(
           params.name,
           params.password,
@@ -846,6 +897,7 @@ export class WalletRPC {
   }
 
   finalizeNewWallet(filename) {
+    this.loadTxDestinations();
     Promise.all([
       this.sendRPC("get_address"),
       this.sendRPC("getheight"),
@@ -961,6 +1013,7 @@ export class WalletRPC {
         .toString("hex");
       this.wallet_state.name = filename;
       this.wallet_state.open = true;
+      this.loadTxDestinations();
 
       if (hardware_wallet) {
         this.startHeartbeat(10);
@@ -1007,6 +1060,20 @@ export class WalletRPC {
   }
 
   heartbeatAction(extended = false) {
+    if (!this.transactionRefreshInFlight && this.wallet_state.open) {
+      this.transactionRefreshInFlight = true;
+      this.getTransactions()
+        .then(transactions => {
+          if (transactions && transactions.transactions) {
+            this.sendGateway("set_wallet_data", transactions);
+          }
+        })
+        .catch(() => {})
+        .then(() => {
+          this.transactionRefreshInFlight = false;
+        });
+    }
+
     Promise.all([
       this.sendRPC("get_address", { account_index: 0 }, 5000),
       this.sendRPC("getheight", {}, 5000),
@@ -1084,8 +1151,23 @@ export class WalletRPC {
           actions.push(this.getAddressBook());
           Promise.all(actions).then(data => {
             for (let n of data) {
+              if (!n || typeof n !== "object" || Array.isArray(n)) continue;
               Object.keys(n).map(key => {
-                wallet[key] = Object.assign(wallet[key], n[key]);
+                const value = n[key];
+                if (
+                  !value ||
+                  typeof value !== "object" ||
+                  Array.isArray(value)
+                ) {
+                  return;
+                }
+                const current =
+                  wallet[key] &&
+                  typeof wallet[key] === "object" &&
+                  !Array.isArray(wallet[key])
+                    ? wallet[key]
+                    : {};
+                wallet[key] = Object.assign(current, value);
               });
             }
             this.sendGateway("set_wallet_data", wallet);
@@ -1192,7 +1274,7 @@ export class WalletRPC {
         });
       }
     } catch (e) {
-      console.debug("Something went wrong when updating ons records: ", e);
+      console.debug("Something went wrong when updating ONS records.");
     }
   }
 
@@ -1214,7 +1296,7 @@ export class WalletRPC {
         return [];
       }
     } catch (e) {
-      console.debug("There was an error getting known records: " + e);
+      console.debug("There was an error getting known ONS records.");
       return [];
     }
   }
@@ -1332,7 +1414,7 @@ export class WalletRPC {
       this.sendGateway("set_wallet_data", { onsRecords: newRecords });
       return record;
     } catch (e) {
-      console.debug("Something went wrong decrypting ons record: ", e);
+      console.debug("Something went wrong decrypting an ONS record.");
       return null;
     }
   }
@@ -1397,7 +1479,7 @@ export class WalletRPC {
 
       return (data.result && data.result.name) || null;
     } catch (e) {
-      console.debug("Failed to hash ons name: ", e);
+      console.debug("Failed to hash an ONS name.");
       return null;
     }
   }
@@ -1426,7 +1508,7 @@ export class WalletRPC {
 
       return (data.result && data.result.value) || null;
     } catch (e) {
-      console.debug("Failed to decrypt ons value: ", e);
+      console.debug("Failed to decrypt an ONS value.");
       return null;
     }
   }
@@ -1461,7 +1543,7 @@ export class WalletRPC {
       });
       return;
     } catch (err) {
-      console.debug(`Failed to sign data: ${data} with error: ${err}`);
+      console.debug("Failed to sign data.");
       this.sendGateway("set_sign_status", {
         code: -1,
         message: err,
@@ -1660,6 +1742,41 @@ export class WalletRPC {
     this.backend.daemon.updateServiceNodes();
   }
 
+  async getDeregisteredStakes(liveNodes, blacklist) {
+    if (!this.wallet_state.open) throw new Error("Wallet is not open");
+
+    const keyImages = await this.sendRPC("export_key_images", { all: true });
+    if (
+      !keyImages.result ||
+      !Array.isArray(keyImages.result.signed_key_images)
+    ) {
+      throw new Error("Unable to read wallet key images");
+    }
+
+    const cachePath = path.join(
+      this.backend.config_dir,
+      "gui",
+      "service-node-key-cache.json"
+    );
+    let cachedNodeKeys = {};
+    try {
+      cachedNodeKeys = fs.readJsonSync(cachePath);
+    } catch (error) {
+      cachedNodeKeys = {};
+    }
+
+    const result = reconcileDeregisteredStakes({
+      liveNodes,
+      blacklist,
+      ownedKeyImages: keyImages.result.signed_key_images.map(
+        entry => entry.key_image
+      ),
+      cachedNodeKeys
+    });
+    fs.writeJsonSync(cachePath, result.nodeKeyCache, { spaces: 2 });
+    return result.deregisteredStakes;
+  }
+
   unlockStake(password, service_node_key, confirmed = false) {
     const sendError = (message, i18n = true) => {
       const key = i18n ? "i18n" : "message";
@@ -1695,10 +1812,7 @@ export class WalletRPC {
             service_node_key
           }).then(data => {
             if (data.hasOwnProperty("error")) {
-              const error =
-                data.error.message.charAt(0).toUpperCase() +
-                data.error.message.slice(1);
-              sendError(error, false);
+              sendError("notification.errors.failedServiceNodeUnlock");
               return null;
             }
 
@@ -1715,11 +1829,7 @@ export class WalletRPC {
           sendRPC("request_stake_unlock").then(data => {
             if (!data) return;
 
-            const unlock = {
-              code: data.unlocked ? 0 : -1,
-              message: data.msg,
-              sending: false
-            };
+            const unlock = unlockResultStatus(data);
 
             // Update the new snode list
             if (data.unlocked) {
@@ -1732,11 +1842,7 @@ export class WalletRPC {
           sendRPC("can_request_stake_unlock").then(data => {
             if (!data) return;
 
-            const unlock = {
-              code: data.can_unlock ? 1 : -1,
-              message: data.msg,
-              sending: false
-            };
+            const unlock = canUnlockStatus(data);
 
             this.sendGateway("set_snode_status", { unlock });
           });
@@ -1759,7 +1865,8 @@ export class WalletRPC {
     let errorMessage = "Failed to relay transaction";
 
     // submit each transaction individually
-    for (let hex of this.pending_tx.metadataList) {
+    for (let i = 0; i < this.pending_tx.metadataList.length; i++) {
+      const hex = this.pending_tx.metadataList[i];
       const params = {
         hex,
         blink: isBlink
@@ -1774,7 +1881,8 @@ export class WalletRPC {
           failed = true;
           break;
         } else if (data.hasOwnProperty("result")) {
-          const tx_hash = data.result.tx_hash;
+          const tx_hash = data.result.tx_hash || this.pending_tx.txHashList[i];
+          this.saveTxDestinations(tx_hash, this.pending_tx.destinations);
           if (note && note !== "") {
             this.saveTxNotes(tx_hash, note);
           }
@@ -1899,7 +2007,18 @@ export class WalletRPC {
           }
 
           this.pending_tx = {
-            metadataList: data.result.tx_metadata_list
+            metadataList: data.result.tx_metadata_list,
+            txHashList:
+              data.result.tx_hash_list ||
+              (data.result.tx_hash ? [data.result.tx_hash] : []),
+            destinations: isSweepAllRPC
+              ? [
+                  {
+                    amount: data.result.amount_list[0],
+                    address: data.params.address
+                  }
+                ]
+              : data.params.destinations
           };
 
           // async relayTransaction(metadataList, isBlink, addressSave, note, isSweepAll)
@@ -2363,6 +2482,17 @@ export class WalletRPC {
           }
         });
 
+        wallet.transactions.tx_list.forEach(tx => {
+          tx.type = normalizeTransactionType(tx.type);
+          if (
+            (tx.type === "out" || tx.type === "pending") &&
+            (!tx.destinations || tx.destinations.length === 0) &&
+            Object.prototype.hasOwnProperty.call(this.txDestinations, tx.txid)
+          ) {
+            tx.destinations = this.txDestinations[tx.txid];
+          }
+        });
+
         wallet.transactions.tx_list.sort(function(a, b) {
           if (a.timestamp < b.timestamp) return 1;
           if (a.timestamp > b.timestamp) return -1;
@@ -2478,6 +2608,45 @@ export class WalletRPC {
         this.sendGateway("set_wallet_data", wallet);
       });
     });
+  }
+
+  getTxDestinationsPath() {
+    return path.join(
+      this.wallet_dir,
+      `${this.wallet_state.name}.tx-destinations.json`
+    );
+  }
+
+  loadTxDestinations() {
+    this.txDestinations = {};
+    const filePath = this.getTxDestinationsPath();
+    if (!fs.existsSync(filePath)) return;
+
+    try {
+      const destinations = fs.readJSONSync(filePath);
+      if (destinations && typeof destinations === "object") {
+        this.txDestinations = destinations;
+      }
+    } catch (error) {
+      console.warn("Failed to read saved transaction destinations", error);
+    }
+  }
+
+  saveTxDestinations(txid, destinations) {
+    if (!txid || !destinations || destinations.length === 0) return;
+
+    this.txDestinations[txid] = destinations.map(destination => ({
+      amount: destination.amount,
+      address: destination.address
+    }));
+
+    try {
+      fs.writeJSONSync(this.getTxDestinationsPath(), this.txDestinations, {
+        spaces: 2
+      });
+    } catch (error) {
+      console.warn("Failed to save transaction destinations", error);
+    }
   }
 
   exportKeyImages(password, filename = null) {
@@ -3022,7 +3191,7 @@ export class WalletRPC {
   }
 
   async saveWallet() {
-    await this.sendRPC("store");
+    await this.sendRPC("store", {}, 2000);
   }
 
   async closeWallet() {
@@ -3040,9 +3209,10 @@ export class WalletRPC {
     };
 
     this.purchasedNames = {};
+    this.txDestinations = {};
 
     await this.saveWallet();
-    await this.sendRPC("close_wallet");
+    await this.sendRPC("close_wallet", {}, 2000);
   }
 
   sendGateway(method, data) {
@@ -3052,36 +3222,35 @@ export class WalletRPC {
     if (!this.wallet_state.open && method == "set_wallet_data") {
       return;
     }
-    this.backend.send(method, data);
+    this.backend.send(method, normalizeUserFacingPayload(data));
   }
 
   sendRPC(method, params = {}, timeout = 0) {
     let id = this.id++;
     let options = {
-      uri: `${this.protocol}${this.hostname}:${this.port}/json_rpc`,
+      url: `${this.protocol}${this.hostname}:${this.port}/json_rpc`,
       method: "POST",
-      json: {
+      data: {
         jsonrpc: "2.0",
         id: id,
         method: method
       },
       auth: {
-        user: this.auth[0],
-        pass: this.auth[1],
-        sendImmediately: false
+        username: this.auth[0],
+        password: this.auth[1]
       },
-      agent: this.agent
+      httpAgent: this.agent
     };
     if (Object.keys(params).length !== 0) {
-      options.json.params = params;
+      options.data.params = params;
     }
     if (timeout > 0) {
       options.timeout = timeout;
     }
 
     return this.queue.add(() => {
-      return request(options)
-        .then(response => {
+      return axios(options)
+        .then(({ data: response }) => {
           if (response.hasOwnProperty("error")) {
             return {
               method: method,
@@ -3102,7 +3271,7 @@ export class WalletRPC {
             error: {
               code: -1,
               message: "Cannot connect to wallet-rpc",
-              cause: error.cause
+              cause: rpcErrorCause(error)
             }
           };
         });
@@ -3115,38 +3284,46 @@ export class WalletRPC {
 
   async quit() {
     return new Promise(resolve => {
-      if (!this.walletRPCProcess) {
+      const walletProcess = this.walletRPCProcess;
+      if (!walletProcess) {
+        this.agent.destroy();
         resolve();
         return;
       }
 
-      this.closeWallet().then(() => {
-        // normally we would exit wallet after this promise
-        // however if the wallet is not responsive to RPC
-        // requests then we must forcefully close it below
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(this.terminateTimer);
+        clearTimeout(this.forceKill);
+        clearTimeout(this.forceResolve);
+        this.agent.destroy();
+        resolve();
+      };
+
+      walletProcess.once("close", finish);
+      this.closeWallet().catch(() => {
+        // Continue with process termination if the RPC is unavailable.
       });
-      setTimeout(() => {
-        if (this.walletRPCProcess) {
-          this.walletRPCProcess.on("close", () => {
-            this.agent.destroy();
-            clearTimeout(this.forceKill);
-            resolve();
-          });
 
-          // Force kill after 20 seconds
-          this.forceKill = setTimeout(() => {
-            if (this.walletRPCProcess) {
-              this.walletRPCProcess.kill("SIGKILL");
-            }
-          }, 20000);
-
-          // Force kill if the rpc is syncing
-          const signal = this.isRPCSyncing ? "SIGKILL" : "SIGTERM";
-          this.walletRPCProcess.kill(signal);
-        } else {
-          resolve();
+      this.terminateTimer = setTimeout(() => {
+        try {
+          walletProcess.kill(this.isRPCSyncing ? "SIGKILL" : "SIGTERM");
+        } catch (error) {
+          finish();
         }
       }, 2500);
+
+      this.forceKill = setTimeout(() => {
+        try {
+          walletProcess.kill("SIGKILL");
+        } catch (error) {
+          // The process may already have exited.
+        }
+      }, 6000);
+
+      this.forceResolve = setTimeout(finish, 9000);
     });
   }
 }

@@ -9,8 +9,114 @@
 }
 
 body {
-    // >=600 so CJK (YaHei has no 500 face) gets synthetic bold too
+    font-family: "Segoe UI Variable", "Segoe UI", Roboto, "Noto Sans SC",
+        "Microsoft YaHei UI", Arial, sans-serif;
+    font-size: clamp(16px, 1vw, 17px);
+    line-height: 1.48;
     font-weight: 600;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+// Light backgrounds reveal thin glyphs and raster interpolation more readily
+// than the dark theme. Use Windows-native hinting and stronger foreground
+// contrast while keeping the same layout and assets.
+body.light {
+    font-weight: 600;
+    text-rendering: geometricPrecision;
+    -webkit-font-smoothing: subpixel-antialiased;
+
+    .monospace {
+        font-family: "Cascadia Mono", "Segoe UI Mono", Consolas,
+            "Microsoft YaHei UI", monospace;
+        font-weight: 600;
+    }
+
+    img {
+        image-rendering: auto;
+        image-rendering: -webkit-optimize-contrast;
+    }
+
+    video {
+        image-rendering: auto;
+        filter: contrast(1.055) saturate(1.04);
+    }
+
+    .splash-logo,
+    .card-logo,
+    .titlebar-brand-logo {
+        filter: contrast(1.08) saturate(1.06) drop-shadow(0 1px 1px rgba(17, 24, 39, 0.12));
+    }
+
+    .q-icon,
+    .material-icons {
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+    }
+
+    .q-field__native,
+    .q-field__input,
+    .q-item__label,
+    .q-btn__content {
+        opacity: 1;
+    }
+}
+
+h1, h2, h3, h4, h5, h6 {
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+.q-btn, .q-field, .q-item {
+    font-size: clamp(15px, 1vw, 17px);
+    font-weight: 600;
+}
+
+.q-item__label,
+.q-field__native,
+.q-field__input,
+.q-btn__content,
+.q-tab__label,
+.q-dialog,
+.modal {
+    font-weight: 600;
+}
+
+// Keep supporting text readable without making dense tables overflow.
+.text-caption,
+.q-field__messages,
+.q-item__label--caption {
+    font-size: 14px;
+    line-height: 1.42;
+    font-weight: 500;
+}
+
+// Near the minimum supported window size, step down just enough to preserve
+// button labels, transaction columns and settings forms without clipping.
+@media (max-width: 1100px) {
+    body {
+        font-size: 15px;
+    }
+
+    .q-btn, .q-field, .q-item {
+        font-size: clamp(14px, 1.25vw, 16px);
+    }
+
+    .text-caption,
+    .q-field__messages,
+    .q-item__label--caption {
+        font-size: 13px;
+    }
+}
+
+.q-dialog__inner {
+    padding: clamp(12px, 2vw, 24px);
+
+    > .modal, > .q-card {
+        width: 760px;
+        max-width: calc(100vw - 32px);
+        max-height: calc(100vh - 32px);
+    }
 }
 
 // Frameless window: the titlebar's 36px -webkit-app-region drag strip keeps
@@ -25,6 +131,7 @@ body {
 .splash-logo {
     border-radius: 50%;
     object-fit: cover;
+    image-rendering: auto;
 }
 
 ::selection {
@@ -93,7 +200,7 @@ footer,
     }
 }
 
-.text-area-judecoin {
+.text-area-wallet {
   margin-top: 0px;
   margin-bottom: 0px;
 }
@@ -112,7 +219,7 @@ footer,
 }
 
 .layout-padding {
-    padding: 15px 16px !important;
+    padding: clamp(12px, 1.4vw, 20px) !important;
 }
 
 .advanced-options-label .q-item-side-right {
@@ -285,7 +392,6 @@ footer,
         }
 
         div:first-child {
-            // TODO: should first and last child be different, where even is this?
             background-color: var(--jude-positive);
         }
 
@@ -464,8 +570,8 @@ footer,
         margin-top: 6px;
         margin-left: 24px;
         text-align: left;
-        font-size: 24px;
-        font-weight: bold;
+        font-size: clamp(20px, 1.5vw, 24px);
+        font-weight: 600;
     }
 
     .q-header {
@@ -507,18 +613,18 @@ footer,
   }
 }
 
-.judecoin-light-teal {
+.wallet-light-teal {
     background: var(--jude-accent);
     color: var(--jude-text-inverse);
 }
 
-.judecoin-navy {
+.wallet-navy {
     background: var(--jude-balance-gradient);
     color: var(--jude-balance-text);
     border: 1px solid var(--jude-balance-border);
 }
 
-.judecoin-teal {
+.wallet-teal {
     background: var(--jude-accent2);
     color: var(--jude-text-inverse);
 }
@@ -599,6 +705,7 @@ footer,
         border: none !important;
 
         .q-item, .q-item-side {
+            background: transparent;
             color: var(--jude-text-inverse);
 
             .text-caption {
@@ -609,6 +716,7 @@ footer,
         .q-btn {
             color: var(--jude-text-inverse);
         }
+
     }
 
     .primary-address:hover {
@@ -617,8 +725,8 @@ footer,
 
 }
 
-.judecoin-list {
-    .judecoin-list-item {
+.wallet-list {
+    .wallet-list-item {
         background: var(--jude-bg-alt);
         -webkit-transition: background-color 0.2s ease-in;
         transition: background-color 0.2s ease-in;
@@ -632,7 +740,7 @@ footer,
         border: 1px solid var(--jude-border);
         border-radius: 4px;
 
-        + .judecoin-list-item {
+        + .wallet-list-item {
             margin-top: 10px;
         }
     }
@@ -641,7 +749,7 @@ footer,
         color: var(--jude-text);
     }
 
-    .judecoin-list-item:hover {
+    .wallet-list-item:hover {
         background: var(--jude-bg-hover);
         cursor: pointer;
 
@@ -749,7 +857,7 @@ footer,
     }
 }
 
-.judecoin-field {
+.wallet-field {
     .content {
         border: 1px solid var(--jude-border);
         background: var(--jude-bg-input);

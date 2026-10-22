@@ -36,7 +36,7 @@
 
     <template v-if="config_daemon.type != 'remote'">
       <div class="row pl-sm">
-        <JudecoinField
+        <WalletField
           class="col-8"
           :label="$t('fieldLabels.localDaemonIP')"
           disable
@@ -48,8 +48,8 @@
             borderless
             dense
           />
-        </JudecoinField>
-        <JudecoinField
+        </WalletField>
+        <WalletField
           class="col-4"
           :label="$t('fieldLabels.localDaemonPort') + '(RPC)'"
         >
@@ -64,13 +64,13 @@
             borderless
             dense
           />
-        </JudecoinField>
+        </WalletField>
       </div>
     </template>
 
     <template v-if="config_daemon.type != 'local'">
       <div class="row q-mt-md pl-sm">
-        <JudecoinField class="col-8" :label="$t('fieldLabels.remoteNodeHost')">
+        <WalletField class="col-8" :label="$t('fieldLabels.remoteNodeHost')">
           <q-input
             v-model="config_daemon.remote_host"
             :placeholder="daemon_defaults.remote_host"
@@ -98,8 +98,8 @@
               </q-item>
             </q-list>
           </q-btn-dropdown>
-        </JudecoinField>
-        <JudecoinField class="col-4" :label="$t('fieldLabels.remoteNodePort')">
+        </WalletField>
+        <WalletField class="col-4" :label="$t('fieldLabels.remoteNodePort')">
           <q-input
             v-model="config_daemon.remote_port"
             :placeholder="toString(daemon_defaults.remote_port)"
@@ -112,12 +112,12 @@
             borderless
             dense
           />
-        </JudecoinField>
+        </WalletField>
       </div>
     </template>
 
     <div class="col q-mt-md pt-sm">
-      <JudecoinField :label="$t('fieldLabels.dataStoragePath')" disable-hover>
+      <WalletField :label="$t('fieldLabels.dataStoragePath')" disable-hover>
         <q-input
           v-model="config.app.data_dir"
           disable
@@ -125,20 +125,11 @@
           borderless
           dense
         />
-        <input
-          id="dataPath"
-          ref="fileInputData"
-          type="file"
-          webkitdirectory
-          directory
-          hidden
-          @change="setDataPath"
-        />
         <q-btn color="primary" @click="selectPath('data')">{{
           $t("buttons.selectLocation")
         }}</q-btn>
-      </JudecoinField>
-      <JudecoinField :label="$t('fieldLabels.walletStoragePath')" disable-hover>
+      </WalletField>
+      <WalletField :label="$t('fieldLabels.walletStoragePath')" disable-hover>
         <q-input
           v-model="config.app.wallet_data_dir"
           disable
@@ -146,19 +137,10 @@
           borderless
           dense
         />
-        <input
-          id="walletPath"
-          ref="fileInputWallet"
-          type="file"
-          webkitdirectory
-          directory
-          hidden
-          @change="setWalletDataPath"
-        />
         <q-btn color="primary" @click="selectPath('wallet')">{{
           $t("buttons.selectLocation")
         }}</q-btn>
-      </JudecoinField>
+      </WalletField>
     </div>
 
     <q-expansion-item
@@ -166,7 +148,7 @@
       header-class="q-mt-sm non-selectable row reverse advanced-options-label"
     >
       <div class="row pl-sm q-mt-sm">
-        <JudecoinField
+        <WalletField
           class="col-6"
           :label="$t('fieldLabels.daemonLogLevel')"
           :disable="is_remote"
@@ -184,8 +166,8 @@
             borderless
             dense
           />
-        </JudecoinField>
-        <JudecoinField class="col-6" :label="$t('fieldLabels.walletLogLevel')">
+        </WalletField>
+        <WalletField class="col-6" :label="$t('fieldLabels.walletLogLevel')">
           <q-input
             v-model="config.wallet.log_level"
             :placeholder="toString(defaults.wallet.log_level)"
@@ -198,12 +180,11 @@
             borderless
             dense
           />
-        </JudecoinField>
+        </WalletField>
       </div>
 
       <div class="row pl-sm q-mt-md">
-        <!-- TODO: Can be generalised to a "port" (or similar) field -->
-        <JudecoinField
+        <WalletField
           class="col-3"
           :label="$t('fieldLabels.maxIncomingPeers')"
           :disable="is_remote"
@@ -221,8 +202,8 @@
             borderless
             dense
           />
-        </JudecoinField>
-        <JudecoinField
+        </WalletField>
+        <WalletField
           class="col-3"
           :label="$t('fieldLabels.maxOutgoingPeers')"
           :disable="is_remote"
@@ -240,8 +221,8 @@
             borderless
             dense
           />
-        </JudecoinField>
-        <JudecoinField
+        </WalletField>
+        <WalletField
           class="col-3"
           :label="$t('fieldLabels.limitUploadRate')"
           :disable="is_remote"
@@ -260,8 +241,8 @@
             borderless
             dense
           />
-        </JudecoinField>
-        <JudecoinField
+        </WalletField>
+        <WalletField
           class="col-3"
           :label="$t('fieldLabels.limitDownloadRate')"
           :disable="is_remote"
@@ -280,10 +261,10 @@
             borderless
             dense
           />
-        </JudecoinField>
+        </WalletField>
       </div>
       <div class="row pl-sm q-mt-md">
-        <JudecoinField
+        <WalletField
           class="col-3"
           :label="$t('fieldLabels.daemonP2pPort')"
           :disable="is_remote"
@@ -302,8 +283,11 @@
             borderless
             dense
           />
-        </JudecoinField>
-        <JudecoinField class="col-3" :label="$t('fieldLabels.internalWalletPort')">
+        </WalletField>
+        <WalletField
+          class="col-3"
+          :label="$t('fieldLabels.internalWalletPort')"
+        >
           <q-input
             v-model="config.app.ws_bind_port"
             :placeholder="toString(defaults.app.ws_bind_port)"
@@ -317,8 +301,8 @@
             borderless
             dense
           />
-        </JudecoinField>
-        <JudecoinField
+        </WalletField>
+        <WalletField
           class="col-3"
           :label="$t('fieldLabels.walletRPCPort')"
           :disable="is_remote"
@@ -337,9 +321,9 @@
             borderless
             dense
           />
-        </JudecoinField>
+        </WalletField>
       </div>
-      <JudecoinField
+      <WalletField
         :helper="$t('fieldLabels.chooseNetwork')"
         :label="$t('fieldLabels.network')"
         class="network-group-field"
@@ -349,18 +333,19 @@
           type="radio"
           :options="[{ label: 'Main Net', value: 'mainnet' }]"
         />
-      </JudecoinField>
+      </WalletField>
     </q-expansion-item>
   </div>
 </template>
 
 <script>
+import { walletDialog } from "src/electron-api";
 import { mapState } from "vuex";
-import JudecoinField from "components/judecoin_field";
+import WalletField from "components/wallet_field";
 export default {
   name: "SettingsGeneral",
   components: {
-    JudecoinField
+    WalletField
   },
   props: {
     randomiseRemote: {
@@ -402,18 +387,11 @@ export default {
     }
   },
   methods: {
-    selectPath(type) {
-      const fileInput = type === "data" ? "fileInputData" : "fileInputWallet";
-      this.$refs[fileInput].click();
-    },
-    setDataPath(file) {
-      if (file.target.files && file.target.files.length > 0) {
-        this.config.app.data_dir = file.target.files[0].path;
-      }
-    },
-    setWalletDataPath(file) {
-      if (file.target.files && file.target.files.length > 0) {
-        this.config.app.wallet_data_dir = file.target.files[0].path;
+    async selectPath(type) {
+      const selected = await walletDialog.selectDirectory();
+      if (selected) {
+        const key = type === "data" ? "data_dir" : "wallet_data_dir";
+        this.config.app[key] = selected;
       }
     },
     setPreset(option) {

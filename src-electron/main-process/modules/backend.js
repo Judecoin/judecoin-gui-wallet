@@ -1,22 +1,57 @@
 import { Daemon } from "./daemon";
 import { WalletRPC } from "./wallet-rpc";
-import { SCEE } from "./SCEE-Node";
 import { dialog } from "electron";
-import semver from "semver";
-import axios from "axios";
-import { version } from "../../../package.json";
-const bunyan = require("bunyan");
 
 const WebSocket = require("ws");
 const electron = require("electron");
+const crypto = require("crypto");
 const os = require("os");
 const fs = require("fs-extra");
 const path = require("upath");
 const objectAssignDeep = require("object-assign-deep");
+const { persistConfig } = require("./config-writer");
 
 const { ipcMain: ipc } = electron;
 
 const LOG_LEVELS = ["fatal", "error", "warn", "info", "debug", "trace"];
+const ALLOWED_EXTERNAL_HOSTS = new Set([
+  "judeblock.net",
+  "www.judeblock.net",
+  "judecoin.info",
+  "www.judecoin.info"
+]);
+
+function openTrustedExternal(rawUrl) {
+  if (typeof rawUrl !== "string" || rawUrl.length > 2048) return false;
+  try {
+    const url = new URL(rawUrl);
+    if (
+      url.protocol !== "https:" ||
+      !ALLOWED_EXTERNAL_HOSTS.has(url.hostname)
+    ) {
+      return false;
+    }
+    electron.shell.openExternal(url.toString());
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function validRemoteHost(value) {
+  return (
+    typeof value === "string" &&
+    value.length <= 253 &&
+    /^(localhost|(?:\d{1,3}\.){3}\d{1,3}|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)$/i.test(
+      value
+    )
+  );
+}
+
+function validPort(value) {
+  const port = Number(value);
+  return Number.isInteger(port) && port >= 1 && port <= 65535;
+}
 
 export class Backend {
   constructor(mainWindow) {
@@ -29,19 +64,15 @@ export class Backend {
     this.wallet_dir = null;
     this.config_file = null;
     this.config_data = {};
-    this.scee = new SCEE();
     this.log = null;
   }
 
   init(config) {
-    let configDir;
-    if (os.platform() === "win32") {
-      configDir = "C:\\ProgramData\\jude";
-      this.wallet_dir = `${os.homedir()}\\Documents\\Jude`;
-    } else {
-      configDir = path.join(os.homedir(), ".jude");
-      this.wallet_dir = path.join(os.homedir(), "Jude");
-    }
+    const configDir = path.join(electron.app.getPath("userData"), "jude");
+    this.wallet_dir =
+      os.platform() === "win32"
+        ? `${os.homedir()}\\Documents\\Jude`
+        : path.join(os.homedir(), "Jude");
 
     {
       this.config_dir = configDir;
@@ -73,9 +104,10 @@ export class Backend {
     const daemons = {
       mainnet: {
         ...daemon,
-        // 公共节点跑在一期 explorer 服务器上（restricted RPC）；palmwallet.org
-        // 等域名均为 Cloudflare 橙云代理，16061 端口不被 CF 转发，故只能用 IP
-        remote_host: "67.230.188.4",
+        // Local-by-default avoids disclosing wallet activity to a centralized
+        // plaintext RPC endpoint. Users may explicitly configure a remote.
+        type: "local",
+        remote_host: "node1.judecoin.pro",
         remote_port: 16061
       },
       stagenet: {
@@ -113,21 +145,51 @@ export class Backend {
     };
 
     this.remotes = [
-      {
-        host: "67.230.188.4",
-        port: "16061"
-      }
+      { host: "node1.judecoin.pro", port: 16061 },
+      { host: "node2.judecoin.pro", port: 16061 },
+      { host: "node.judecoin.info", port: 16061 }
     ];
 
     this.token = config.token;
+    const expectedToken = Buffer.from(this.token, "utf8");
 
     this.wss = new WebSocket.Server({
+      host: "127.0.0.1",
       port: config.port,
-      maxPayload: Number.POSITIVE_INFINITY
+      maxPayload: 1024 * 1024,
+      verifyClient: ({ req }) => {
+        try {
+          const requestUrl = new URL(req.url, "ws://127.0.0.1");
+          if (requestUrl.pathname !== "/wallet") return false;
+          const suppliedToken = Buffer.from(
+            requestUrl.searchParams.get("token") || "",
+            "utf8"
+          );
+          return (
+            suppliedToken.length === expectedToken.length &&
+            crypto.timingSafeEqual(suppliedToken, expectedToken)
+          );
+        } catch (error) {
+          return false;
+        }
+      }
     });
 
     this.wss.on("connection", ws => {
-      ws.on("message", data => this.receive(data));
+      const rate = { windowStart: Date.now(), count: 0 };
+      ws.on("message", data => {
+        const now = Date.now();
+        if (now - rate.windowStart >= 1000) {
+          rate.windowStart = now;
+          rate.count = 0;
+        }
+        rate.count += 1;
+        if (rate.count > 100) {
+          ws.close(1008, "rate limit");
+          return;
+        }
+        this.receive(data);
+      });
     });
   }
 
@@ -137,20 +199,44 @@ export class Backend {
       data
     };
 
-    let encrypted_data = this.scee.encryptString(
-      JSON.stringify(message),
-      this.token
-    );
+    const serialized = JSON.stringify(message);
 
     this.wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(encrypted_data);
+        client.send(serialized);
       }
     });
   }
 
+  reportConfigWriteError(error) {
+    if (this.log) {
+      this.log.error(`Failed to save wallet settings: ${error.message}`);
+    } else {
+      console.error(`Failed to save wallet settings: ${error.message}`);
+    }
+    this.send("show_notification", {
+      type: "negative",
+      i18n: "notification.errors.internalError",
+      timeout: 3000
+    });
+  }
+
   receive(data) {
-    let decrypted_data = JSON.parse(this.scee.decryptString(data, this.token));
+    if (!data || data.length > 1024 * 1024) return;
+    let decrypted_data;
+    try {
+      decrypted_data = JSON.parse(data.toString("utf8"));
+    } catch (error) {
+      return;
+    }
+    if (
+      !decrypted_data ||
+      typeof decrypted_data !== "object" ||
+      typeof decrypted_data.module !== "string" ||
+      typeof decrypted_data.method !== "string"
+    ) {
+      return;
+    }
 
     // route incoming request to either the daemon, wallet, or here
     switch (decrypted_data.module) {
@@ -171,7 +257,7 @@ export class Backend {
   }
 
   handle(data) {
-    let params = data.data;
+    const params = data.data && typeof data.data === "object" ? data.data : {};
 
     // check if config has changed
     let config_changed = false;
@@ -182,42 +268,34 @@ export class Backend {
         break;
       case "quick_save_config":
         // save only partial config settings
-        Object.keys(params).map(key => {
-          this.config_data[key] = Object.assign(
-            this.config_data[key],
-            params[key]
+        {
+          const previousConfig = this.config_data;
+          this.config_data = objectAssignDeep(
+            {},
+            this.config_data || {},
+            params
           );
-        });
-        fs.writeFile(
-          this.config_file,
-          JSON.stringify(this.config_data, null, 4),
-          "utf8",
-          () => {
-            this.send("set_app_data", {
-              config: params,
-              pending_config: params
+          persistConfig(fs, this.config_file, this.config_data)
+            .then(() => {
+              this.send("set_app_data", {
+                config: params,
+                pending_config: params
+              });
+            })
+            .catch(error => {
+              this.config_data = previousConfig;
+              this.reportConfigWriteError(error);
             });
-          }
-        );
+        }
         break;
       case "save_config_init":
       case "save_config": {
-        if (data.method === "save_config") {
-          Object.keys(this.config_data).map(i => {
-            Object.keys(this.config_data[i]).map(j => {
-              if (this.config_data[i][j] !== params[i][j]) {
-                config_changed = true;
-              }
-            });
-          });
-        }
-
-        Object.keys(params).map(key => {
-          this.config_data[key] = Object.assign(
-            this.config_data[key],
-            params[key]
-          );
-        });
+        const previousConfigData = this.config_data;
+        const previousConfig = JSON.stringify(previousConfigData || {});
+        this.config_data = objectAssignDeep({}, this.config_data || {}, params);
+        config_changed =
+          data.method === "save_config" &&
+          previousConfig !== JSON.stringify(this.config_data);
 
         const validated = Object.keys(this.defaults)
           .filter(k => k in this.config_data)
@@ -235,12 +313,28 @@ export class Backend {
           ...this.config_data,
           ...validated
         };
+        Object.keys(this.config_data.daemons || {}).forEach(network => {
+          const daemon = this.config_data.daemons[network];
+          const defaults = this.defaults.daemons[network];
+          if (!daemon || !defaults) return;
+          if (!["local", "local_remote", "remote"].includes(daemon.type)) {
+            daemon.type = defaults.type;
+          }
+          if (!validRemoteHost(daemon.remote_host)) {
+            daemon.remote_host = defaults.remote_host;
+          }
+          [
+            "p2p_bind_port",
+            "remote_port",
+            "rpc_bind_port",
+            "zmq_rpc_bind_port"
+          ].forEach(key => {
+            if (!validPort(daemon[key])) daemon[key] = defaults[key];
+          });
+        });
 
-        fs.writeFile(
-          this.config_file,
-          JSON.stringify(this.config_data, null, 4),
-          "utf8",
-          () => {
+        persistConfig(fs, this.config_file, this.config_data)
+          .then(() => {
             if (data.method == "save_config_init") {
               this.startup();
             } else {
@@ -252,8 +346,11 @@ export class Backend {
                 this.send("settings_changed_reboot");
               }
             }
-          }
-        );
+          })
+          .catch(error => {
+            this.config_data = previousConfigData;
+            this.reportConfigWriteError(error);
+          });
         break;
       }
       case "init":
@@ -276,45 +373,60 @@ export class Backend {
               ? "https://www.judeblock.net"
               : "https://www.judeblock.net";
           const url = `${baseUrl}/${path}/`;
-          require("electron").shell.openExternal(url + params.id);
+          const identifier =
+            typeof params.id === "string" &&
+            /^[A-Za-z0-9_-]{1,128}$/.test(params.id)
+              ? params.id
+              : "";
+          if (identifier) openTrustedExternal(url + identifier);
         }
         break;
       }
 
       case "open_url":
-        require("electron").shell.openExternal(params.url);
+        openTrustedExternal(params.url);
         break;
 
       case "save_png": {
-        let filename = dialog.showSaveDialog(this.mainWindow, {
-          title: "Save " + params.type,
-          filters: [{ name: "PNG", extensions: ["png"] }],
-          defaultPath: os.homedir()
-        });
-        if (filename) {
-          let base64Data = params.img.replace(/^data:image\/png;base64,/, "");
-          let binaryData = Buffer.from(base64Data, "base64").toString("binary");
-          fs.writeFile(filename, binaryData, "binary", err => {
-            if (err) {
-              this.send("show_notification", {
-                type: "negative",
-                i18n: [
-                  "notification.errors.errorSavingItem",
-                  { item: params.type }
-                ],
-                timeout: 2000
-              });
-            } else {
-              this.send("show_notification", {
-                i18n: [
-                  "notification.positive.itemSaved",
-                  { item: params.type, filename }
-                ],
-                timeout: 2000
-              });
-            }
-          });
+        if (
+          typeof params.img !== "string" ||
+          !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(params.img) ||
+          params.img.length > 10 * 1024 * 1024
+        ) {
+          break;
         }
+        dialog
+          .showSaveDialog(this.mainWindow, {
+            title: "Save " + String(params.type || "image").slice(0, 80),
+            filters: [{ name: "PNG", extensions: ["png"] }],
+            defaultPath: os.homedir()
+          })
+          .then(({ canceled, filePath: filename }) => {
+            if (canceled || !filename) return;
+            let base64Data = params.img.replace(/^data:image\/png;base64,/, "");
+            let binaryData = Buffer.from(base64Data, "base64");
+            fs.writeFile(filename, binaryData, err => {
+              if (err) {
+                this.send("show_notification", {
+                  type: "negative",
+                  i18n: [
+                    "notification.errors.errorSavingItem",
+                    { item: params.type }
+                  ],
+                  timeout: 2000
+                });
+              } else {
+                this.send("show_notification", {
+                  i18n: [
+                    "notification.positive.itemSaved",
+                    { item: params.type, filename }
+                  ],
+                  timeout: 2000
+                });
+              }
+            });
+          })
+          .catch(() => {});
         break;
       }
 
@@ -322,42 +434,45 @@ export class Backend {
         break;
     }
   }
-  // if the version is a whole minor version out of date (hardfork out of date)
-  // set update required to true
   async checkVersion() {
-    try {
-      const { data } = await axios.get(
-        "https://api.github.com/repos/Judecoin/judecoin-gui-wallet/releases/latest"
-      );
-      // remove the 'v' from front of the version
-      const latestVersion = data.tag_name.substring(1);
-      // can return "major", "minor", "patch"
-      const vSizeDiff = semver.diff(version, latestVersion);
-      const updateAvailable = semver.ltr(version, latestVersion);
-      const majorOrMinor = vSizeDiff === "major" || vSizeDiff == "minor";
-      const updateRequired = updateAvailable && majorOrMinor;
-      this.send("set_update_required", updateRequired);
-    } catch (e) {
-      this.send("set_updated_required", false);
-    }
+    this.send("set_update_required", false);
   }
 
   initLogger(logPath) {
-    let log = bunyan.createLogger({
-      name: "log",
-      streams: [
-        {
-          type: "rotating-file",
-          path: path.join(logPath, "electron.log"),
-          period: "1d", // daily rotation
-          count: 4 // keep 4 days of logs
-        }
-      ]
+    const logFile = path.join(logPath, "electron.log");
+    const write = (level, ...items) => {
+      const text = items
+        .map(item => {
+          if (item instanceof Error) return item.stack || item.message;
+          if (typeof item === "string") return item;
+          try {
+            return JSON.stringify(item);
+          } catch (_) {
+            return String(item);
+          }
+        })
+        .join(" ");
+      fs.appendFile(
+        logFile,
+        `${new Date().toISOString()} [${level.toUpperCase()}] ${text}\n`,
+        () => {}
+      );
+    };
+    const log = {};
+    LOG_LEVELS.forEach(level => {
+      log[level] = (...items) => write(level, ...items);
     });
 
     LOG_LEVELS.forEach(level => {
-      ipc.on(`log-${level}`, (first, ...rest) => {
-        log[level](...rest);
+      ipc.on(`log-${level}`, (event, ...rest) => {
+        if (event.sender !== this.mainWindow.webContents) {
+          return;
+        }
+        const limited = rest
+          .map(item => String(item))
+          .join(" ")
+          .slice(0, 16384);
+        log[level](limited);
       });
     });
 
@@ -392,11 +507,49 @@ export class Backend {
         return;
       }
 
-      let disk_config_data = JSON.parse(data);
+      let disk_config_data;
+      try {
+        disk_config_data = JSON.parse(data);
+      } catch (parseError) {
+        this.log.error("Invalid wallet configuration JSON", parseError);
+        this.send("set_app_data", {
+          status: { code: -1 },
+          config: this.config_data,
+          pending_config: this.config_data
+        });
+        return;
+      }
+
+      if (
+        !disk_config_data ||
+        typeof disk_config_data !== "object" ||
+        Array.isArray(disk_config_data)
+      ) {
+        this.log.error("Invalid wallet configuration root object");
+        this.send("set_app_data", {
+          status: { code: -1 },
+          config: this.config_data,
+          pending_config: this.config_data
+        });
+        return;
+      }
 
       // semi-shallow object merge
       Object.keys(disk_config_data).map(key => {
-        if (!this.config_data.hasOwnProperty(key)) {
+        const diskValue = disk_config_data[key];
+        if (
+          !diskValue ||
+          typeof diskValue !== "object" ||
+          Array.isArray(diskValue)
+        ) {
+          return;
+        }
+        if (
+          !Object.prototype.hasOwnProperty.call(this.config_data, key) ||
+          !this.config_data[key] ||
+          typeof this.config_data[key] !== "object" ||
+          Array.isArray(this.config_data[key])
+        ) {
           this.config_data[key] = {};
         }
         this.config_data[key] = Object.assign(
@@ -423,7 +576,23 @@ export class Backend {
         ...this.config_data,
         ...validated
       };
-
+      // Migrate only the exact retired presets when a remote mode is selected.
+      const mainnetDaemon = this.config_data.daemons.mainnet;
+      if (
+        mainnetDaemon &&
+        mainnetDaemon.type !== "local" &&
+        [
+          "localhost",
+          "127.0.0.1",
+          "node1.judecoin.com",
+          "node.judecoinworld.com",
+          "67.230.167.187"
+        ].includes(mainnetDaemon.remote_host) &&
+        Number(mainnetDaemon.remote_port) === 16061
+      ) {
+        mainnetDaemon.remote_host = this.remotes[0].host;
+        mainnetDaemon.remote_port = this.remotes[0].port;
+      }
       // save config file back to file, so updated options are stored on disk
       fs.writeFile(
         this.config_file,
@@ -506,21 +675,69 @@ export class Backend {
 
       // Make sure the remote node provided is accessible
       const config_daemon = this.config_data.daemons[net_type];
-      this.daemon.checkRemote(config_daemon).then(data => {
-        if (data.error) {
-          // If we can default to local then we do so, otherwise we tell the user  to re-set the node
-          if (config_daemon.type === "local_remote") {
-            this.config_data.daemons[net_type].type = "local";
+      let runtime_config = this.config_data;
+      const checkRemoteWithFailover = async () => {
+        const initialResult = await this.daemon.checkRemote(config_daemon);
+        if (!initialResult.error || config_daemon.type === "local") {
+          return initialResult;
+        }
+
+        for (const preset of this.remotes) {
+          if (
+            preset.host === config_daemon.remote_host &&
+            Number(preset.port) === Number(config_daemon.remote_port)
+          ) {
+            continue;
+          }
+          const candidate = {
+            ...config_daemon,
+            remote_host: preset.host,
+            remote_port: preset.port
+          };
+          const candidateResult = await this.daemon.checkRemote(candidate);
+          if (!candidateResult.error) {
+            config_daemon.remote_host = preset.host;
+            config_daemon.remote_port = preset.port;
+            fs.writeFile(
+              this.config_file,
+              JSON.stringify(this.config_data, null, 4),
+              "utf8",
+              () => {}
+            );
             this.send("set_app_data", {
               config: this.config_data,
               pending_config: this.config_data
             });
-            this.send("show_notification", {
-              type: "warning",
-              textColor: "black",
-              i18n: "notification.warnings.usingLocalNode",
-              timeout: 2000
-            });
+            if (this.log) {
+              this.log.info(
+                `Selected reachable remote node ${preset.host}:${preset.port}`
+              );
+            }
+            return candidateResult;
+          }
+        }
+        return initialResult;
+      };
+
+      checkRemoteWithFailover().then(data => {
+        if (data.error) {
+          // If we can default to local then we do so, otherwise we tell the user  to re-set the node
+          if (config_daemon.type === "local_remote") {
+            runtime_config = {
+              ...this.config_data,
+              daemons: {
+                ...this.config_data.daemons,
+                [net_type]: {
+                  ...config_daemon,
+                  type: "local"
+                }
+              }
+            };
+            if (this.log) {
+              this.log.warn(
+                "Configured remote node was unavailable; continuing with the local node"
+              );
+            }
           } else {
             this.send("show_notification", {
               type: "negative",
@@ -566,19 +783,21 @@ export class Backend {
                 }
               });
             } else {
-              // daemon not found, probably removed by AV, set to remote node
-              this.config_data.daemons[net_type].type = "remote";
+              // Version probing is informational only. In particular, do not
+              // overwrite the user's selected local/local+remote mode when a
+              // bundled daemon returns no version text or the probe times out.
+              // daemon.start() below remains responsible for starting exactly
+              // the persisted mode and reporting a genuine launch failure.
               this.send("set_app_data", {
                 status: {
-                  code: 5
-                },
-                config: this.config_data,
-                pending_config: this.config_data
+                  code: 4,
+                  message: "N/A"
+                }
               });
             }
 
             this.daemon
-              .start(this.config_data)
+              .start(runtime_config)
               .then(() => {
                 this.send("set_app_data", {
                   status: {
@@ -587,7 +806,7 @@ export class Backend {
                 });
 
                 this.walletd
-                  .start(this.config_data)
+                  .start(runtime_config)
                   .then(() => {
                     this.send("set_app_data", {
                       status: {
@@ -620,7 +839,7 @@ export class Backend {
                 // eslint-disable-next-line
               })
               .catch(error => {
-                if (this.config_data.daemons[net_type].type == "remote") {
+                if (runtime_config.daemons[net_type].type == "remote") {
                   this.send("show_notification", {
                     type: "negative",
                     i18n: "notification.errors.remoteCannotBeReached",
@@ -653,21 +872,22 @@ export class Backend {
   }
 
   quit() {
-    return new Promise(resolve => {
-      let process = [];
-      if (this.daemon) {
-        process.push(this.daemon.quit());
-      }
-      if (this.walletd) {
-        process.push(this.walletd.quit());
-      }
-      if (this.wss) {
-        this.wss.close();
-      }
+    if (this.wss) {
+      this.wss.close();
+      this.wss = null;
+    }
 
-      Promise.all(process).then(() => {
-        resolve();
-      });
+    // Stop wallet-rpc first: it may still need the daemon while closing the
+    // wallet. Stopping both in parallel intermittently left one child holding
+    // its RPC port during an application relaunch.
+    const stopWallet = this.walletd
+      ? Promise.resolve(this.walletd.quit()).catch(() => {})
+      : Promise.resolve();
+
+    return stopWallet.then(() => {
+      return this.daemon
+        ? Promise.resolve(this.daemon.quit()).catch(() => {})
+        : Promise.resolve();
     });
   }
 

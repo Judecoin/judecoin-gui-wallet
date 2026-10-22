@@ -1,21 +1,21 @@
 <template>
   <q-page>
     <div class="q-mx-md import-wallet">
-      <JudecoinField
+      <WalletField
         :label="$t('fieldLabels.newWalletName')"
         :error="$v.wallet.name.$error"
       >
         <q-input
           v-model="wallet.name"
+          @input="$v.wallet.name.$reset()"
           :dark="theme == 'dark'"
           borderless
           dense
           @keyup.enter="import_wallet"
-          @blur="$v.wallet.name.$touch"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField
+      <WalletField
         :label="$t('fieldLabels.walletFile')"
         disable-hover
         :error="$v.wallet.path.$error"
@@ -28,21 +28,14 @@
           borderless
           dense
         />
-        <input
-          id="walletPath"
-          ref="fileInput"
-          type="file"
-          hidden
-          @change="setWalletPath"
-        />
         <q-btn
           color="primary"
           :label="$t('buttons.selectWalletFile')"
           @click="selectFile"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField :label="$t('fieldLabels.password')">
+      <WalletField :label="$t('fieldLabels.password')">
         <q-input
           v-model="wallet.password"
           :placeholder="$t('placeholders.walletPassword')"
@@ -52,9 +45,9 @@
           dense
           @keyup.enter="import_wallet"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField :label="$t('fieldLabels.confirmPassword')">
+      <WalletField :label="$t('fieldLabels.confirmPassword')">
         <q-input
           v-model="wallet.password_confirm"
           type="password"
@@ -63,7 +56,7 @@
           dense
           @keyup.enter="import_wallet"
         />
-      </JudecoinField>
+      </WalletField>
       <q-btn
         class="submit-button"
         color="primary"
@@ -77,10 +70,11 @@
 <script>
 import { required } from "vuelidate/lib/validators";
 import { mapState } from "vuex";
-import JudecoinField from "components/judecoin_field";
+import WalletField from "components/wallet_field";
+import { walletDialog } from "src/electron-api";
 export default {
   components: {
-    JudecoinField
+    WalletField
   },
   data() {
     return {
@@ -130,11 +124,12 @@ export default {
     }
   },
   methods: {
-    selectFile() {
-      this.$refs.fileInput.click();
-    },
-    setWalletPath(file) {
-      this.wallet.path = file.target.files[0].path;
+    async selectFile() {
+      const selected = await walletDialog.selectFile();
+      if (selected) {
+        this.wallet.path = selected;
+        this.$v.wallet.path.$reset();
+      }
     },
     import_wallet() {
       this.$v.wallet.$touch();
@@ -188,7 +183,7 @@ export default {
     }
   }
 
-  .judecoin-field {
+  .wallet-field {
     margin-top: 16px;
   }
 }

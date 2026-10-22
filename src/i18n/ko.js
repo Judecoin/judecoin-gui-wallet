@@ -218,6 +218,8 @@ export default {
       title: "서비스 노드 잠금 해제",
       confirmTitle: "잠금 해제 확인",
       message: "서비스 노드를 잠금 해제하시겠습니까?",
+      confirmMessage:
+        "공유 노드의 이 스테이크에 대한 잠금 해제를 요청합니다. 서비스 노드가 비활성화되도록 예약되며, 노드가 만료될 때까지 보상을 계속 받습니다. 계속하시겠습니까?",
       ok: "잠금 해제"
     },
     unlockServiceNodeWarning: {
@@ -373,6 +375,7 @@ export default {
       signatureCopied: "서명이 클립보드에 복사되었습니다",
       signatureVerified: "서명이 검증되었습니다",
       stakeSuccess: "스테이킹에 성공했습니다",
+      unlockServiceNodeSuccess: "서비스 노드 잠금 해제에 성공했습니다",
       transactionNotesSaved: "트랜잭션 메모가 저장되었습니다",
       walletCopied: "지갑 주소가 클립보드에 복사되었습니다"
     },
@@ -543,12 +546,12 @@ export default {
     hardwareWallet: "하드웨어 지갑",
     hardwareWallets: "하드웨어 지갑",
     loadingSettings: "설정 불러오는 중",
-    judecoinBalance: "잔액",
+    judeBalance: "잔액",
     lokinetNameDescription:
       "Lokinet에서 이름을 구매하거나 업데이트합니다. 이름을 구매하면 목록에 표시되기까지 1~2분이 소요될 수 있습니다. Lokinet에 대해 자세히 알아보려면 다음을 방문하세요: ",
-    judecoinAccumulatedRewards: "누적 보상",
-    judecoinUnlockedBalance: "잠금 해제된 잔액",
-    judecoinUnlockedShort: "잠금 해제됨",
+    judeAccumulatedRewards: "누적 보상",
+    judeUnlockedBalance: "잠금 해제된 잔액",
+    judeUnlockedShort: "잠금 해제됨",
     me: "나",
     noTransactionsFound: "트랜잭션을 찾을 수 없습니다",
     notes: "메모",
@@ -577,16 +580,24 @@ export default {
     saveToAddressBook: "주소록에 저장",
     seedWords: "시드 단어",
     selectLanguage: "언어 선택",
-    registrationStakingMigrationJudecoinToSessionToken:
+    registrationStakingMigrationJudeToSessionToken:
       "Jude에서 Session Token으로의 마이그레이션이 진행 중이므로 새 서비스 노드에 대한 등록 및 스테이킹이 비활성화되었습니다. 자세한 내용은 여기를 참조하세요: ",
     serviceNodeContributionDescription:
-      "스테이킹은 Judecoin 네트워크의 안전에 기여합니다. 기여에 대한 보상으로 JUDE를 받습니다. 스테이킹이 완료되면 JUDE가 잠금 해제되기까지 180일을 기다려야 합니다. 스테이킹에 대해 자세히 알아보려면 다음을 방문하세요",
+      "스테이킹은 Judecoin 네트워크의 안전에 기여합니다. 기여에 대한 보상으로 JUDE를 받습니다. 스테이킹에 대해 자세히 알아보려면 다음을 방문하세요",
     serviceNodeRegistrationDescription:
       '"{prepareCommand}" 명령어를 사용하여 서비스 노드로 등록하는 데몬이 생성한 {registerCommand} 명령어를 입력하세요',
     serviceNodeStartStakingDescription:
       "스테이킹을 시작하려면 스테이킹 탭을 방문하세요",
     noServiceNodesCurrentlyAvailable: "현재 기여 가능한 서비스 노드가 없습니다",
+    serviceNodeStatus: {
+      active: "활성",
+      decommissioned: "일시 중지됨",
+      unlocking: "잠금 해제 중",
+      awaitingContributions: "기여 대기 중",
+      deregistered: "등록 해제됨"
+    },
     serviceNodeDetails: {
+      status: "상태",
       contributors: "기여자",
       lastRewardBlockHeight: "마지막 보상 블록 높이",
       lastUptimeProof: "마지막 가동 시간 증명",
@@ -622,6 +633,7 @@ export default {
     transactionConfirmed: "확인됨",
     transactions: {
       amount: "금액",
+      confirmations: "확인 수",
       description: "{type} 트랜잭션",
       fee: "수수료",
       paidBySender: "발신자 부담",
@@ -636,8 +648,8 @@ export default {
         pending: "대기 중",
         pendingIncoming: "수신 대기 중",
         pendingOutgoing: "발신 대기 중",
-        miner: "채굴자",
-        serviceNode: "서비스 노드",
+        miner: "블록 보상",
+        serviceNode: "블록 보상",
         governance: "거버넌스",
         stake: "스테이킹",
         failed: "실패"

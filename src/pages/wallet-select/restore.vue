@@ -1,39 +1,39 @@
 <template>
   <q-page>
     <div class="q-mx-md">
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="$t('fieldLabels.walletName')"
         :error="$v.wallet.name.$error"
       >
         <q-input
           v-model="wallet.name"
+          @input="$v.wallet.name.$reset()"
           borderless
           dense
           @keyup.enter="restore_wallet"
-          @blur="$v.wallet.name.$touch"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="$t('fieldLabels.mnemonicSeed')"
         :error="$v.wallet.seed.$error"
       >
         <q-input
           v-model="wallet.seed"
-          class="full-width text-area-judecoin"
+          @input="$v.wallet.seed.$reset()"
+          class="full-width text-area-wallet"
           :placeholder="$t('placeholders.mnemonicSeed')"
           type="textarea"
           borderless
           dense
-          @blur="$v.wallet.seed.$touch"
         />
-      </JudecoinField>
+      </WalletField>
 
       <div class="row items-end q-mt-md">
         <div class="col-md-9 col-sm-8">
-          <JudecoinField
+          <WalletField
             v-if="wallet.refresh_type == 'date'"
             :label="$t('fieldLabels.restoreFromDate')"
           >
@@ -71,22 +71,22 @@
                 </q-icon>
               </template>
             </q-input>
-          </JudecoinField>
-          <JudecoinField
+          </WalletField>
+          <WalletField
             v-else-if="wallet.refresh_type == 'height'"
             :label="$t('fieldLabels.restoreFromBlockHeight')"
             :error="$v.wallet.refresh_start_height.$error"
           >
             <q-input
               v-model="wallet.refresh_start_height"
+              @input="$v.wallet.refresh_start_height.$reset()"
               type="number"
               min="0"
               :dark="theme == 'dark'"
               borderless
               dense
-              @blur="$v.wallet.refresh_start_height.$touch"
             />
-          </JudecoinField>
+          </WalletField>
         </div>
         <div class="col-sm-4 col-md-3">
           <template v-if="wallet.refresh_type == 'date'">
@@ -116,7 +116,7 @@
         </div>
       </div>
 
-      <JudecoinField class="q-mt-md" :label="$t('fieldLabels.password')">
+      <WalletField class="q-mt-md" :label="$t('fieldLabels.password')">
         <q-input
           v-model="wallet.password"
           :placeholder="$t('placeholders.walletPassword')"
@@ -126,9 +126,9 @@
           dense
           @keyup.enter="restore_wallet"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField class="q-mt-md" :label="$t('fieldLabels.confirmPassword')">
+      <WalletField class="q-mt-md" :label="$t('fieldLabels.confirmPassword')">
         <q-input
           v-model="wallet.password_confirm"
           type="password"
@@ -137,7 +137,7 @@
           dense
           @keyup.enter="restore_wallet"
         />
-      </JudecoinField>
+      </WalletField>
       <q-btn
         class="submit-button"
         color="primary"
@@ -151,7 +151,7 @@
 <script>
 import { required, numeric } from "vuelidate/lib/validators";
 import { mapState } from "vuex";
-import JudecoinField from "components/judecoin_field";
+import WalletField from "components/wallet_field";
 import { date } from "quasar";
 import _ from "lodash";
 
@@ -161,7 +161,7 @@ let dateFirstBlock = date.formatDate(timeStampFirstBlock, qDateFormat);
 
 export default {
   components: {
-    JudecoinField
+    WalletField
   },
   data() {
     return {

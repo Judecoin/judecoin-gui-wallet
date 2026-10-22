@@ -212,6 +212,8 @@ export default {
       title: "解鎖服務節點",
       confirmTitle: "確認解鎖",
       message: "是否要解鎖此服務節點？",
+      confirmMessage:
+        "您正在申請解鎖這筆共享節點質押。這將安排服務節點停止運行；在服務節點到期前，您仍會繼續獲得獎勵。是否繼續？",
       ok: "解鎖"
     },
     unlockServiceNodeWarning: {
@@ -367,6 +369,7 @@ export default {
       signatureCopied: "簽名已複製到剪貼簿",
       signatureVerified: "簽名驗證通過",
       stakeSuccess: "質押成功",
+      unlockServiceNodeSuccess: "服務節點解鎖成功",
       transactionNotesSaved: "交易備註已儲存",
       walletCopied: "錢包地址已複製到剪貼簿"
     },
@@ -535,12 +538,12 @@ export default {
     hardwareWallet: "硬體錢包",
     hardwareWallets: "硬體錢包",
     loadingSettings: "正在載入設定",
-    judecoinBalance: "餘額",
+    judeBalance: "餘額",
     lokinetNameDescription:
       "在 Lokinet 上購買或更新名稱。如果您購買了一個名稱，可能需要一兩分鐘才會顯示在清單中。如需了解更多關於 Lokinet 的資訊，請造訪：",
-    judecoinAccumulatedRewards: "累計獎勵",
-    judecoinUnlockedBalance: "可用餘額",
-    judecoinUnlockedShort: "可用",
+    judeAccumulatedRewards: "累計獎勵",
+    judeUnlockedBalance: "可用餘額",
+    judeUnlockedShort: "可用",
     me: "我",
     noTransactionsFound: "未找到交易記錄",
     notes: "備註",
@@ -568,15 +571,23 @@ export default {
     saveToAddressBook: "儲存至地址簿",
     seedWords: "助記詞",
     selectLanguage: "選擇語言",
-    registrationStakingMigrationJudecoinToSessionToken:
+    registrationStakingMigrationJudeToSessionToken:
       "由於 Jude 正在遷移至 Session Token，新服務節點的註冊和質押功能已暫時停用。閱讀更多：",
     serviceNodeContributionDescription:
-      "質押有助於維護 Judecoin 網路的安全性。作為回報，您將獲得 JUDE 獎勵。質押後，您需要等待 180 天才能解鎖您的 JUDE。如需了解更多關於質押的資訊，請造訪",
+      "質押有助於維護 Judecoin 網路的安全性。作為回報，您將獲得 JUDE 獎勵。如需了解更多關於質押的資訊，請造訪",
     serviceNodeRegistrationDescription:
       '輸入由正在註冊成為服務節點的節點程式使用 "{prepareCommand}" 指令產生的 {registerCommand} 指令',
     serviceNodeStartStakingDescription: "要開始質押，請前往質押分頁",
     noServiceNodesCurrentlyAvailable: "目前沒有可供貢獻的服務節點",
+    serviceNodeStatus: {
+      active: "運行中",
+      decommissioned: "暫時退役",
+      unlocking: "解鎖中",
+      awaitingContributions: "等待質押完成",
+      deregistered: "已註銷"
+    },
     serviceNodeDetails: {
+      status: "狀態",
       contributors: "貢獻者",
       lastRewardBlockHeight: "最後獎勵區塊高度",
       lastUptimeProof: "最後在線證明",
@@ -612,6 +623,7 @@ export default {
     transactionConfirmed: "已確認",
     transactions: {
       amount: "金額",
+      confirmations: "確認數",
       description: "{type}交易",
       fee: "手續費",
       paidBySender: "由發送方支付",
@@ -626,8 +638,8 @@ export default {
         pending: "待處理",
         pendingIncoming: "待處理收款",
         pendingOutgoing: "待處理付款",
-        miner: "挖礦",
-        serviceNode: "服務節點",
+        miner: "區塊獎勵",
+        serviceNode: "區塊獎勵",
         governance: "治理",
         stake: "質押",
         failed: "失敗"

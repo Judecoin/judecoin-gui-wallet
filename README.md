@@ -9,48 +9,39 @@ More information on the project can be found on the [website](https://www.judeco
 
 This is the new Electron GUI for Judecoin. It is open source and completely free to use without restrictions, anyone may create an alternative implementation of the Judecoin Electron GUI that uses the protocol and network in a compatible manner.
 
-Please submit any changes as pull requests to the development branch, all changes are assessed in the development branch before being merged to master, release tags are considered stable builds for the GUI.
+Please submit changes as pull requests to the `main` branch. Release tags are
+considered stable GUI builds.
 
 #### Pre-requisites
 
-- Download latest [judecoind](https://github.com/Judecoin/judecoin/releases)
-- Extract the Judecoin binaries to a folder
+- Node.js version from `.nvmrc`
+- pnpm
+- Official Judecoin v4.0.0 `judecoind` and `judecoin-wallet-rpc` binaries for
+  the target operating system
 
 #### Commands
 
 ```
-nvm use 14.14.0 # check .nvmrc for the current version required
-npm install -g @quasar/cli
 git clone https://github.com/Judecoin/judecoin-gui-wallet.git
 cd judecoin-gui-wallet
-cp path_to_judecoind_binaries/judecoind bin/
-cp path_to_judecoind_binaries/judecoin-wallet-rpc bin/
-npm install
+nvm use
+corepack enable
+pnpm install --frozen-lockfile
 ```
 
-On Linux or Windows, the release archive can also be installed with:
-
-```
-./tools/download-judecoin-files.sh URL_OF_JUDECOIN_RELEASE_ARCHIVE
-```
-
-Judecoin does not currently publish a macOS core archive. macOS users must
-build `judecoind` and `judecoin-wallet-rpc` from the Judecoin source and place
-the native executables in `bin/`.
+Before running release checks or building installers, place the verified core
+binaries as described in [BACKEND-PLACEMENT.md](BACKEND-PLACEMENT.md).
 
 For dev:
 
 ```
-npm run dev
+pnpm dev
 ```
 
 For building:
 
-**Note:** This will only build the binaries for the system you run the command on. Running this command on `linux` will only make `linux` binaries, no `mac` or `windows` binaries.
-
-```
-npm run build
-```
+See [BUILDING.md](BUILDING.md) for the Windows x64 and Linux x86_64 build and
+verification steps.
 
 ### Adding language support
 

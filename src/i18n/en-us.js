@@ -217,6 +217,8 @@ export default {
       title: "Unlock service node",
       confirmTitle: "Confirm unlock",
       message: "Do you want to unlock the service node?",
+      confirmMessage:
+        "You are requesting to unlock this shared-node stake. This will schedule the service node for deactivation. You will continue receiving rewards until the service node expires. Do you want to continue?",
       ok: "UNLOCK"
     },
     unlockServiceNodeWarning: {
@@ -372,6 +374,7 @@ export default {
       signatureCopied: "Signature copied to clipboard",
       signatureVerified: "Signature verified",
       stakeSuccess: "Successfully staked",
+      unlockServiceNodeSuccess: "Successfully unlocked service node",
       transactionNotesSaved: "Transaction notes saved",
       walletCopied: "Wallet address copied to clipboard"
     },
@@ -547,12 +550,12 @@ export default {
     hardwareWallet: "Hardware wallet",
     hardwareWallets: "Hardware wallets",
     loadingSettings: "Loading settings",
-    judecoinBalance: "Balance",
+    judeBalance: "Balance",
     lokinetNameDescription:
       "Purchase or update a name on Lokinet. If you purchase a name it may take a minute or two for it to show up in the list. To learn more about lokinet visit: ",
-    judecoinAccumulatedRewards: "Accumulated rewards",
-    judecoinUnlockedBalance: "Unlocked balance",
-    judecoinUnlockedShort: "Unlocked",
+    judeAccumulatedRewards: "Accumulated rewards",
+    judeUnlockedBalance: "Unlocked balance",
+    judeUnlockedShort: "Unlocked",
     me: "Me",
     noTransactionsFound: "No transactions found",
     notes: "Notes",
@@ -582,16 +585,24 @@ export default {
     saveToAddressBook: "Save to address book",
     seedWords: "Seed words",
     selectLanguage: "Select language",
-    registrationStakingMigrationJudecoinToSessionToken: "",
+    registrationStakingMigrationJudeToSessionToken: "",
     serviceNodeContributionDescription:
-      "Staking contributes to the safety of the Judecoin network. For your contribution, you earn JUDE. Once staked, you will have to wait 180 days to have your JUDE unlocked. To learn more about staking, please visit the",
+      "Staking contributes to the safety of the Judecoin network. For your contribution, you earn JUDE. To learn more about staking, please visit the",
     serviceNodeRegistrationDescription:
       'Enter the {registerCommand} command produced by the daemon that is registering to become a Service Node using the "{prepareCommand}" command',
     serviceNodeStartStakingDescription:
       "To start staking, please visit the Staking tab",
     noServiceNodesCurrentlyAvailable:
       "There are currently no service nodes available for contribution",
+    serviceNodeStatus: {
+      active: "Active",
+      decommissioned: "Temporarily decommissioned",
+      unlocking: "Unlocking",
+      awaitingContributions: "Awaiting contributions",
+      deregistered: "Deregistered"
+    },
     serviceNodeDetails: {
+      status: "Status",
       contributors: "Contributors",
       lastRewardBlockHeight: "Last reward block height",
       lastUptimeProof: "Last uptime proof",
@@ -627,6 +638,7 @@ export default {
     transactionConfirmed: "confirmed",
     transactions: {
       amount: "Amount",
+      confirmations: "Confirmations",
       description: "{type} transaction",
       fee: "Fee",
       paidBySender: "paid by sender",
@@ -641,8 +653,8 @@ export default {
         pending: "Pending",
         pendingIncoming: "Pending incoming",
         pendingOutgoing: "Pending outgoing",
-        miner: "Miner",
-        serviceNode: "Service Node",
+        miner: "Block reward",
+        serviceNode: "Block reward",
         governance: "Governance",
         stake: "Stake",
         failed: "Failed"

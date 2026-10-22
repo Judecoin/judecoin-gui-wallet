@@ -157,6 +157,8 @@ export default {
       title: "Desbloquear nódulo de serviço",
       confirmTitle: "Confirmar desbloqueio",
       message: "Deseja desbloquear o nódulo de serviço?",
+      confirmMessage:
+        "Você está solicitando o desbloqueio desta participação em um nódulo compartilhado. Isso programará a desativação do nódulo de serviço. Você continuará recebendo recompensas até o nódulo expirar. Deseja continuar?",
       ok: "DESBLOQUEAR"
     },
     unlockServiceNodeWarning: {
@@ -245,7 +247,7 @@ export default {
     copyViewKey: "Copiar chave de visualização",
     createNewWallet: "Criar nova carteira",
     deleteWallet: "Apagar carteira",
-    exit: "Saír da Carteira GUI Loki",
+    exit: "Saír da Carteira GUI Jude",
     importOldGUIWallet: "Importar carteiras da antiga carteira GUI",
     manageKeyImages: "Administrar Imagens de Chave",
     openWallet: "Abrir carteira",
@@ -277,6 +279,7 @@ export default {
       sendSuccess: "Transação enviada com sucesso.",
       signatureCopied: "Signature copied to clipboard",
       stakeSuccess: "Participação com sucesso",
+      unlockServiceNodeSuccess: "Nó de serviço desbloqueado com sucesso",
       transactionNotesSaved: "A nota de transação foi salva"
     },
     errors: {
@@ -408,9 +411,9 @@ export default {
     destinationUnknown: "Destino Desconhecido",
     editAddressBookEntry: "Editar registo do livro de endereços",
     loadingSettings: "Carregando configurações",
-    judecoinBalance: "Saldo",
-    judecoinUnlockedBalance: "Saldo desbloqueado",
-    judecoinUnlockedShort: "Desbloqueado",
+    judeBalance: "Saldo",
+    judeUnlockedBalance: "Saldo desbloqueado",
+    judeUnlockedShort: "Desbloqueado",
     noTransactionsFound: "Nenhuma transação encontrada",
     notes: "Notas",
     numberOfUnspentOutputs: "Número de outputs não gastos",
@@ -445,6 +448,7 @@ export default {
     transactionConfirmed: "confirmado",
     transactions: {
       amount: "Quantidade",
+      confirmations: "Confirmações",
       description: "{type} transação",
       fee: "Taxa",
       paidBySender: "pago por remetente",
@@ -459,8 +463,8 @@ export default {
         pending: "Pendentes",
         pendingIncoming: "Entradas pendentes",
         pendingOutgoing: "Saídas pendentes",
-        miner: "Mineiro",
-        serviceNode: "Nódulo de Serviço",
+        miner: "Recompensa de bloco",
+        serviceNode: "Recompensa de bloco",
         governance: "Governança",
         stake: "Participação",
         failed: "Falhou"

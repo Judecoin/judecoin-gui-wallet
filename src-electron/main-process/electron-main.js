@@ -1,12 +1,75 @@
-import { app, ipcMain, BrowserWindow, Menu, dialog } from "electron";
+import {
+  app,
+  ipcMain,
+  BrowserWindow,
+  Menu,
+  clipboard,
+  dialog,
+  nativeImage,
+  shell
+} from "electron";
 import { version, productName } from "../../package.json";
 import { Backend } from "./modules/backend";
-import { checkForUpdate } from "./auto-updater";
-import menuTemplate from "./menu";
 import isDev from "electron-is-dev";
 const net = require("net");
 const windowStateKeeper = require("electron-window-state");
 const path = require("upath");
+const fs = require("fs");
+
+function sanitizeLogText(value) {
+  return String(value)
+    .replace(
+      /(mnemonic|seed|passphrase|password|secret|(?:private|spend|view)[ _-]?key)(\s*[=:]\s*)[^\s,;]+/gi,
+      "$1$2[REDACTED]"
+    )
+    .replace(/C:\\Users\\[^\\\s]+/gi, "C:\\Users\\[REDACTED]")
+    .replace(/\/Users\/[^/\s]+/g, "/Users/[REDACTED]")
+    .replace(/\/home\/[^/\s]+/g, "/home/[REDACTED]")
+    .slice(0, 16384);
+}
+
+function writeStartupFailure(kind, error) {
+  try {
+    const logDir = path.join(app.getPath("userData"), "jude", "logs");
+    fs.mkdirSync(logDir, { recursive: true });
+    const detail = sanitizeLogText(
+      error && error.stack ? error.stack : String(error || "unknown error")
+    );
+    fs.appendFileSync(
+      path.join(logDir, "startup-crash.log"),
+      `${new Date().toISOString()} [${kind}] ${detail}\n`,
+      "utf8"
+    );
+  } catch (_) {
+    // A logging failure must never become a second startup failure.
+  }
+}
+
+process.on("uncaughtException", error => {
+  writeStartupFailure("uncaughtException", error);
+  if (app.isReady()) {
+    dialog.showErrorBox(
+      "Jude Wallet startup error",
+      "The wallet could not start. Details were written to startup-crash.log."
+    );
+  }
+});
+
+process.on("unhandledRejection", error => {
+  writeStartupFailure("unhandledRejection", error);
+});
+
+app.on("render-process-gone", (_event, _webContents, details) => {
+  writeStartupFailure("render-process-gone", JSON.stringify(details));
+});
+
+app.on("child-process-gone", (_event, details) => {
+  writeStartupFailure("child-process-gone", JSON.stringify(details));
+});
+
+// The wallet does not need GPU acceleration. Software rendering also avoids
+// startup crashes caused by outdated or remotely-provided Windows GPU drivers.
+app.disableHardwareAcceleration();
 
 // The splash screens autoplay a looping <video>; Chromium's autoplay policy
 // would otherwise leave it paused on first paint
@@ -42,13 +105,55 @@ if (process.env.PROD) {
   global.__statics = path.join(__dirname, "").replace(/\\/g, "\\\\");
   global.__ryo_bin = path.join(__dirname, "..", "bin").replace(/\\/g, "\\\\");
 } else {
-  global.__ryo_bin = path.join(process.cwd(), "bin").replace(/\\/g, "\\\\");
+  global.__ryo_bin = path
+    .join(process.cwd(), "bin", process.platform)
+    .replace(/\\/g, "\\\\");
 }
 
 let mainWindow, backend;
 let showConfirmClose = true;
-let forceQuit = false;
-let installUpdate = false;
+let shutdownInProgress = false;
+let rendererReady = false;
+let closeFallbackTimer = null;
+
+function isTrustedRenderer(event) {
+  return Boolean(
+    mainWindow &&
+      !mainWindow.isDestroyed() &&
+      event.sender === mainWindow.webContents
+  );
+}
+
+function shutdownApplication(restart = false) {
+  if (shutdownInProgress) return;
+  shutdownInProgress = true;
+  showConfirmClose = false;
+
+  const activeBackend = backend;
+  backend = null;
+  const cleanup = activeBackend ? activeBackend.quit() : Promise.resolve();
+  const cleanupDeadline = new Promise(resolve => setTimeout(resolve, 20000));
+
+  Promise.race([
+    Promise.resolve(cleanup).catch(() => {}),
+    cleanupDeadline
+  ]).then(() => {
+    // Do not schedule the replacement process until wallet-rpc and daemon
+    // have released their ports. This is required for reliable node-mode
+    // switching on Windows.
+    if (restart && !isDev) {
+      console.info("[node-switch-restart-v2] child cleanup complete");
+      app.relaunch();
+    }
+    setTimeout(() => app.exit(0), restart ? 350 : 0);
+  });
+}
+
+function cleanMenuLabel(value, fallback) {
+  if (typeof value !== "string") return fallback;
+  const valueClean = value.replace(/[\r\n\t]/g, " ").trim();
+  return valueClean.slice(0, 80) || fallback;
+}
 
 const title = `${productName} v${version}`;
 
@@ -69,18 +174,25 @@ let inputMenu = Menu.buildFromTemplate([
 // Right-click menus use Electron roles whose default labels are English;
 // the renderer pushes translated labels here whenever the app language changes
 ipcMain.on("update-context-menu-labels", (e, labels) => {
+  if (!isTrustedRenderer(e) || !labels || typeof labels !== "object") return;
   selectionMenu = Menu.buildFromTemplate([
-    { role: "copy", label: labels.copy },
+    { role: "copy", label: cleanMenuLabel(labels.copy, "Copy") },
     { type: "separator" },
-    { role: "selectall", label: labels.selectAll }
+    {
+      role: "selectall",
+      label: cleanMenuLabel(labels.selectAll, "Select All")
+    }
   ]);
 
   inputMenu = Menu.buildFromTemplate([
-    { role: "cut", label: labels.cut },
-    { role: "copy", label: labels.copy },
-    { role: "paste", label: labels.paste },
+    { role: "cut", label: cleanMenuLabel(labels.cut, "Cut") },
+    { role: "copy", label: cleanMenuLabel(labels.copy, "Copy") },
+    { role: "paste", label: cleanMenuLabel(labels.paste, "Paste") },
     { type: "separator" },
-    { role: "selectall", label: labels.selectAll }
+    {
+      role: "selectall",
+      label: cleanMenuLabel(labels.selectAll, "Select All")
+    }
   ]);
 });
 
@@ -101,66 +213,182 @@ function createWindow() {
     height: mainWindowState.height,
     minWidth: 880,
     minHeight: 580,
+    show: false,
     // Frameless: window chrome is drawn by the renderer (components/titlebar.vue)
     frame: false,
     backgroundColor: "#0D1117",
     icon: require("path").join(__statics, "icon.png"),
     title,
     webPreferences: {
-      nodeIntegration: true,
-      nodeIntegrationInWorker: true,
-      zoomFactor: 1.25,
+      nodeIntegration: false,
+      nodeIntegrationInWorker: false,
+      contextIsolation: true,
+      sandbox: true,
+      enableRemoteModule: false,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      zoomFactor: 1,
       // anything we want preloaded, e.g. global vars
       preload: path.resolve(__dirname, "electron-preload.js")
     }
   });
 
-  // Electron 4 sometimes ignores webPreferences.zoomFactor; enforce after load
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.show();
+    // Quasar 1's desktop drawer occasionally measures the initial Windows
+    // viewport before the frameless window is visible. A one-pixel native
+    // resize triggers the same correct reflow users previously got by
+    // maximizing and restoring, without changing the persisted window size.
+    setTimeout(() => {
+      if (!mainWindow || mainWindow.isDestroyed()) return;
+      const [width, height] = mainWindow.getSize();
+      mainWindow.setSize(width + 1, height);
+      mainWindow.setSize(width, height);
+      mainWindow.webContents.invalidate();
+    }, 50);
+  });
+
+  const applicationUrl = new URL(process.env.APP_URL);
+  mainWindow.webContents.on("will-navigate", (event, targetUrl) => {
+    try {
+      const target = new URL(targetUrl);
+      if (
+        target.protocol !== applicationUrl.protocol ||
+        target.origin !== applicationUrl.origin ||
+        target.pathname !== applicationUrl.pathname
+      ) {
+        event.preventDefault();
+      }
+    } catch (error) {
+      event.preventDefault();
+    }
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
+    try {
+      const parsed = new URL(targetUrl);
+      const allowedHosts = new Set([
+        "judeblock.net",
+        "www.judeblock.net",
+        "judecoin.info",
+        "www.judecoin.info"
+      ]);
+      if (parsed.protocol === "https:" && allowedHosts.has(parsed.hostname)) {
+        shell.openExternal(parsed.toString());
+      }
+    } catch (error) {
+      // Invalid and non-HTTPS destinations remain blocked.
+    }
+    return { action: "deny" };
+  });
+
+  // The former Electron 4 build forced 125% zoom. On current Electron that
+  // makes Quasar calculate a viewport narrower than the native window until a
+  // maximize/restore cycle. Keep the renderer at its CSS-native 100% scale.
   mainWindow.webContents.on("did-finish-load", () => {
-    mainWindow.webContents.setZoomFactor(1.25);
+    mainWindow.webContents.setZoomFactor(1);
+  });
+
+  mainWindow.webContents.on(
+    "did-fail-load",
+    (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      if (isMainFrame) {
+        writeStartupFailure(
+          "did-fail-load",
+          `${errorCode} ${errorDescription} ${validatedURL}`
+        );
+      }
+    }
+  );
+
+  mainWindow.webContents.on(
+    "console-message",
+    (_event, level, message, line, sourceId) => {
+      if (level >= 2) {
+        writeStartupFailure(
+          "renderer-console",
+          `${message} (${sourceId}:${line})`
+        );
+      }
+    }
+  );
+
+  ipcMain.on("renderer-ready", event => {
+    if (!isTrustedRenderer(event)) return;
+    rendererReady = true;
+    writeStartupFailure("renderer-ready", "renderer initialized");
+    // Reflow only after Vue/Quasar has mounted. This mirrors the layout update
+    // caused by maximizing and restoring without changing the saved bounds.
+    const [width, height] = mainWindow.getSize();
+    mainWindow.setSize(width + 1, height);
+    mainWindow.setSize(width, height);
+    mainWindow.webContents.invalidate();
   });
 
   mainWindow.on("close", e => {
-    // Don't ask for confirmation if we're installing an update
-    if (installUpdate) {
-      return;
-    }
-
-    if (process.platform === "darwin") {
-      if (forceQuit) {
-        forceQuit = false;
-        if (showConfirmClose) {
-          e.preventDefault();
-          mainWindow.show();
-          mainWindow.webContents.send("confirmClose");
-        } else {
-          e.defaultPrevented = false;
-        }
-      } else {
-        e.preventDefault();
-        mainWindow.hide();
+    if (showConfirmClose) {
+      e.preventDefault();
+      if (!rendererReady) {
+        shutdownApplication(false);
+        return;
       }
-    } else {
-      if (showConfirmClose) {
-        e.preventDefault();
-        mainWindow.webContents.send("confirmClose");
-      } else {
-        e.defaultPrevented = false;
-      }
+      mainWindow.webContents.send("confirmClose");
+      clearTimeout(closeFallbackTimer);
+      closeFallbackTimer = setTimeout(() => shutdownApplication(false), 5000);
     }
   });
 
   ipcMain.on("confirmClose", (e, restart) => {
-    showConfirmClose = false;
+    if (!isTrustedRenderer(e) || typeof restart !== "boolean") return;
+    clearTimeout(closeFallbackTimer);
+    shutdownApplication(restart);
+  });
 
-    // In dev mode, this will launch a blank white screen
-    if (restart && !isDev) app.relaunch();
+  ipcMain.on("window-command", (event, command) => {
+    event.returnValue = false;
+    if (!isTrustedRenderer(event) || typeof command !== "string") return;
+    if (command === "isMaximized") {
+      event.returnValue = mainWindow.isMaximized();
+    } else if (command === "minimize") {
+      mainWindow.minimize();
+    } else if (command === "toggleMaximize") {
+      mainWindow.isMaximized()
+        ? mainWindow.unmaximize()
+        : mainWindow.maximize();
+    } else if (command === "close") {
+      mainWindow.close();
+    }
+  });
 
-    const promise = backend ? backend.quit() : Promise.resolve();
-    promise.then(() => {
-      backend = null;
-      app.quit();
+  ipcMain.on("clipboard-write-text", (event, value) => {
+    if (
+      isTrustedRenderer(event) &&
+      typeof value === "string" &&
+      value.length <= 1024 * 1024
+    ) {
+      clipboard.writeText(value);
+    }
+  });
+
+  ipcMain.on("clipboard-write-image", (event, value) => {
+    if (
+      isTrustedRenderer(event) &&
+      typeof value === "string" &&
+      value.length <= 10 * 1024 * 1024 &&
+      /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(value)
+    ) {
+      clipboard.writeImage(nativeImage.createFromDataURL(value));
+    }
+  });
+
+  ipcMain.handle("select-path", async (event, kind) => {
+    if (!isTrustedRenderer(event) || !["file", "directory"].includes(kind)) {
+      return null;
+    }
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: [kind === "directory" ? "openDirectory" : "openFile"]
     });
+    return result.canceled ? null : result.filePaths[0] || null;
   });
 
   mainWindow.webContents.on("did-finish-load", () => {
@@ -184,19 +412,17 @@ function createWindow() {
           mainWindow.webContents.send("initialize", config);
         })
         .catch(() => {
-          dialog.showMessageBox(
-            mainWindow,
-            {
+          dialog
+            .showMessageBox(mainWindow, {
               title: "Startup error",
               message: "Jude Wallet could not open an internal port",
               type: "error",
               buttons: ["ok"]
-            },
-            () => {
+            })
+            .finally(() => {
               showConfirmClose = false;
               app.quit();
-            }
-          );
+            });
         });
     });
   });
@@ -211,6 +437,23 @@ function createWindow() {
   });
 
   mainWindow.loadURL(process.env.APP_URL);
+  setTimeout(() => {
+    if (!rendererReady && mainWindow && !mainWindow.isDestroyed()) {
+      writeStartupFailure(
+        "renderer-timeout",
+        "renderer did not report ready within 15 seconds"
+      );
+      dialog
+        .showMessageBox(mainWindow, {
+          title: "Jude Wallet startup problem",
+          message:
+            "The wallet interface could not start. You can close the window normally. Diagnostic details were written to startup-crash.log.",
+          type: "error",
+          buttons: ["Close wallet"]
+        })
+        .then(() => shutdownApplication(false));
+    }
+  }, 15000);
   mainWindowState.manage(mainWindow);
 }
 
@@ -230,56 +473,29 @@ app.on("ready", () => {
     app.quit();
     return;
   }
-  checkForUpdate(
-    () => mainWindow,
-    autoUpdater => {
-      if (mainWindow) {
-        mainWindow.webContents.send("showQuitScreen");
-      }
-
-      const promise = backend ? backend.quit() : Promise.resolve();
-      promise.then(() => {
-        installUpdate = true;
-        backend = null;
-        autoUpdater.quitAndInstall();
-      });
-    }
-  );
-  if (process.platform === "darwin") {
-    const menu = Menu.buildFromTemplate(menuTemplate);
-    Menu.setApplicationMenu(menu);
-  }
   createWindow();
+  const session = mainWindow.webContents.session;
+  session.setPermissionRequestHandler((_webContents, _permission, callback) =>
+    callback(false)
+  );
+  session.setPermissionCheckHandler(() => false);
 });
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on("activate", () => {
   if (mainWindow === null) {
     createWindow();
-  } else if (process.platform === "darwin") {
-    mainWindow.show();
   }
 });
 
 app.on("before-quit", () => {
-  // Quit instantly if we are installing an update
-  if (installUpdate) {
-    return;
-  }
-
-  if (process.platform === "darwin") {
-    forceQuit = true;
-  } else {
-    if (backend) {
-      backend.quit().then(() => {
-        mainWindow.close();
-      });
-    }
+  if (backend) {
+    backend.quit().then(() => {
+      mainWindow.close();
+    });
   }
 });
 

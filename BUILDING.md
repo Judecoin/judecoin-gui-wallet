@@ -4,40 +4,31 @@ Set up the supported versions of npm/node/etc.:
 
     nvm use
 
-## Linux, Windows
+## Install dependencies
 
-    npm run build
+    pnpm install --frozen-lockfile
 
-## MacOS
+The GitHub web-upload source package excludes backend executables. Before
+running release checks or building an installer, restore the four verified
+files described in `BACKEND-PLACEMENT.md`.
 
-If you don't care about signing (i.e. you are not going to distribute) then you should be able to
-simply `npm run build`.
+## Check Linux release inputs
 
-When you want to distribute the app, however, you need to do a bunch of crap to satisfy Apple's
-arbitrary security theatre Rube Goldberg machine that purports to keep users safe but in reality is
-designed to further Apple lock-in control of the Apple ecosystem.
+    pnpm test:linux
 
-1.  You have to pay Apple money (every year) to get a developer account.
-2.  You need a `Developer ID Application` certificate, created and signed from the Apple, and loaded
-    into your system keychain. `security find-identity -v` should show it.
-3.  You need to create an [App-specific password](https://support.apple.com/en-al/HT204397) for the
-    Apple developer account under which you are notarizing.
-4.  In the project root, create a `.env` file with contents:
+## Linux x86_64
 
-        SIGNING_APPLE_ID=your-developer-id@example.com
-        SIGNING_APP_PASSWORD=app-specific-password
+Build on Linux:
 
-    This password can be plaintext if absolutely needed (e.g. in a CI job) but should be a [keychain
-    reference](https://github.com/electron/electron-notarize#safety-when-using-appleidpassword) such
-    as `@keychain:some-token` for better security where feasible.
+    pnpm exec quasar build -m electron -T linux -s
+    cd dist/electron/UnPackaged
+    pnpm install --prod --ignore-scripts --ignore-workspace
+    cd ../../..
+    pnpm exec electron-builder --config electron-builder-final-linux.yml --linux --x64 --publish never
 
-    - If you have multiple ids and need to use a particular signing team ID you can add:
+The release outputs AppImage and deb packages. The packaged runtime contains
+only the official v4.0.0 Linux `judecoind` and `judecoin-wallet-rpc` binaries.
 
-      SIGNING_TEAM_ID=TEAMIDXYZ1
+## Windows x64
 
-5.  If building from a remote connection (e.g. ssh'd into a mac) then unlock the keychain for that
-    session by running `security unlock`.
-
-With all of that set up, your `npm run build` should produce a signed and notarized installer.
-Hopefully. Maybe. Sometimes Apple's servers are broken and you might have to try again. But don't
-worry, Apple's incompetence around signing makes everything more secure because... reasons.
+See `FINAL-BUILD.md` for the existing Windows release process.

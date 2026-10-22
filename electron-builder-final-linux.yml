@@ -1,0 +1,46 @@
+appId: com.jude.desktop-wallet
+productName: jude-wallet-gui
+copyright: Copyright © 2024-2026 Judecoin Community
+electronVersion: 41.10.3
+npmRebuild: false
+artifactName: Jude-Wallet-gui-4.0.0-Linux-x64.${ext}
+directories:
+  app: dist/electron/UnPackaged
+  output: dist/electron/Packaged
+files:
+  - "**/*"
+extraResources:
+  - from: bin/linux
+    to: bin
+linux:
+  executableName: jude-wallet-gui
+  category: Finance
+  maintainer: Judecoin Community
+  syncDesktopName: true
+  icon: src-electron/icons/linux
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+deb:
+  packageName: jude-wallet-gui
+  synopsis: Desktop GUI wallet for Judecoin cryptocurrency
+  fpm:
+    - packaging/linux/jude-wallet-gui.metainfo.xml=/usr/share/metainfo/jude-wallet-gui.metainfo.xml
+    - --replaces=jude-desktop-wallet
+    - --conflicts=jude-desktop-wallet
+    - --provides=jude-desktop-wallet
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+    - libsecret-1-0
+    - libappindicator3-1 | libayatana-appindicator3-1

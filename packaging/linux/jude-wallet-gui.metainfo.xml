@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>jude-wallet-gui.desktop</id>
+  <name>Judecoin Wallet</name>
+  <summary>Desktop GUI wallet for Judecoin cryptocurrency</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>BSD-3-Clause</project_license>
+  <description>
+    <p>Desktop GUI wallet for Judecoin cryptocurrency.</p>
+  </description>
+  <launchable type="desktop-id">jude-wallet-gui.desktop</launchable>
+  <icon type="stock">jude-wallet-gui</icon>
+  <url type="homepage">https://www.judecoin.info</url>
+</component>

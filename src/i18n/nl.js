@@ -219,6 +219,8 @@ export default {
       title: "Service node ontgrendelen",
       confirmTitle: "Ontgrendeling bevestigen",
       message: "Wilt u de service node ontgrendelen?",
+      confirmMessage:
+        "U vraagt om deze inzet in een gedeeld service node te ontgrendelen. Hierdoor wordt de deactivering van het service node gepland. U blijft beloningen ontvangen totdat het node verloopt. Wilt u doorgaan?",
       ok: "ONTGRENDELEN"
     },
     unlockServiceNodeWarning: {
@@ -374,6 +376,7 @@ export default {
       signatureCopied: "Handtekening gekopieerd naar klembord",
       signatureVerified: "Handtekening geverifieerd",
       stakeSuccess: "Succesvol gestaked",
+      unlockServiceNodeSuccess: "Service node succesvol ontgrendeld",
       transactionNotesSaved: "Transactienotities opgeslagen",
       walletCopied: "Portemonnee-adres gekopieerd naar klembord"
     },
@@ -553,12 +556,12 @@ export default {
     hardwareWallet: "Hardware-portemonnee",
     hardwareWallets: "Hardware-portemonnees",
     loadingSettings: "Instellingen laden",
-    judecoinBalance: "Saldo",
+    judeBalance: "Saldo",
     lokinetNameDescription:
       "Koop of werk een naam bij op Lokinet. Als u een naam koopt, kan het een minuut of twee duren voordat deze in de lijst verschijnt. Bezoek voor meer informatie over Lokinet: ",
-    judecoinAccumulatedRewards: "Opgebouwde beloningen",
-    judecoinUnlockedBalance: "Ontgrendeld saldo",
-    judecoinUnlockedShort: "Ontgrendeld",
+    judeAccumulatedRewards: "Opgebouwde beloningen",
+    judeUnlockedBalance: "Ontgrendeld saldo",
+    judeUnlockedShort: "Ontgrendeld",
     me: "Ik",
     noTransactionsFound: "Geen transacties gevonden",
     notes: "Notities",
@@ -588,17 +591,25 @@ export default {
     saveToAddressBook: "Opslaan in adresboek",
     seedWords: "Herstelwoorden",
     selectLanguage: "Taal selecteren",
-    registrationStakingMigrationJudecoinToSessionToken:
+    registrationStakingMigrationJudeToSessionToken:
       "Registratie en staking in nieuwe Service Nodes is uitgeschakeld vanwege de lopende migratie van Jude naar Session Token. Lees hier meer: ",
     serviceNodeContributionDescription:
-      "Staking draagt bij aan de veiligheid van het Judecoin-netwerk. Voor uw bijdrage verdient u JUDE. Eenmaal gestaked, moet u 180 dagen wachten voordat uw JUDE wordt ontgrendeld. Bezoek voor meer informatie over staking de",
+      "Staking draagt bij aan de veiligheid van het Judecoin-netwerk. Voor uw bijdrage verdient u JUDE. Bezoek voor meer informatie over staking de",
     serviceNodeRegistrationDescription:
       'Voer de {registerCommand}-opdracht in die is geproduceerd door de daemon die zich registreert als Service Node met behulp van de "{prepareCommand}"-opdracht',
     serviceNodeStartStakingDescription:
       "Om te beginnen met staken, ga naar het tabblad Staking",
     noServiceNodesCurrentlyAvailable:
       "Er zijn momenteel geen service nodes beschikbaar voor bijdrage",
+    serviceNodeStatus: {
+      active: "Actief",
+      decommissioned: "Tijdelijk buiten dienst",
+      unlocking: "Wordt ontgrendeld",
+      awaitingContributions: "Wacht op bijdragen",
+      deregistered: "Uitgeschreven"
+    },
     serviceNodeDetails: {
+      status: "Status",
       contributors: "Bijdragers",
       lastRewardBlockHeight: "Laatste beloningsblokhoogte",
       lastUptimeProof: "Laatste uptime-bewijs",
@@ -634,6 +645,7 @@ export default {
     transactionConfirmed: "bevestigd",
     transactions: {
       amount: "Bedrag",
+      confirmations: "Bevestigingen",
       description: "{type} transactie",
       fee: "Kosten",
       paidBySender: "betaald door verzender",
@@ -648,8 +660,8 @@ export default {
         pending: "In afwachting",
         pendingIncoming: "In afwachting inkomend",
         pendingOutgoing: "In afwachting uitgaand",
-        miner: "Miner",
-        serviceNode: "Service Node",
+        miner: "Blokbeloning",
+        serviceNode: "Blokbeloning",
         governance: "Governance",
         stake: "Stake",
         failed: "Mislukt"

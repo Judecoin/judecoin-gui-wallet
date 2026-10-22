@@ -12,12 +12,12 @@
           link
           no-border
           :dark="theme == 'dark'"
-          class="judecoin-list tx-list"
+          class="wallet-list tx-list"
         >
           <q-item
             v-for="(tx, i) in tx_list_paged"
             :key="`${tx.txid}-${tx.type}-${i}`"
-            class="judecoin-list-item transaction"
+            class="wallet-list-item transaction"
             :class="'tx-' + tx.type"
             @click.native="details(tx)"
           >
@@ -26,7 +26,7 @@
             </q-item-section>
             <q-item-section class="amount">
               <div>
-                <FormatJudecoin :amount="tx.amount || 0" />
+                <FormatJude :amount="tx.amount || 0" />
               </div>
             </q-item-section>
             <q-item-section class="txid">
@@ -59,11 +59,11 @@
 </template>
 
 <script>
-const { clipboard } = require("electron");
+import { clipboard } from "src/electron-api";
 import { mapState } from "vuex";
 import { QSpinnerDots } from "quasar";
 import TxDetails from "components/tx_details";
-import FormatJudecoin from "components/format_judecoin";
+import FormatJude from "components/format_jude";
 import { i18n } from "boot/i18n";
 import ContextMenu from "components/menus/contextmenu";
 
@@ -97,7 +97,7 @@ export default {
   components: {
     QSpinnerDots,
     TxDetails,
-    FormatJudecoin,
+    FormatJude,
     ContextMenu
   },
   props: {
@@ -156,15 +156,11 @@ export default {
       }
     },
     tx_list: {
-      handler(val, old) {
-        // Check if anything changed in the tx list
-        if (val.length == old.length) {
-          const changed = val.filter((v, i) => v.note !== old[i].note);
-          if (changed.length === 0) return;
-        }
+      handler() {
         this.filterTxList();
         this.pageTxList();
-      }
+      },
+      deep: true
     },
     type: {
       handler(val, old) {
@@ -330,14 +326,16 @@ export default {
 
 <style lang="scss">
 .tx-list {
-  .judecoin-list-item {
+  .wallet-list-item {
     padding-top: 0;
     padding-bottom: 0;
   }
   .transaction {
+    min-height: 58px;
+
     .amount,
     .txid {
-      padding: 8px 10px;
+      padding: 8px clamp(8px, 0.8vw, 14px);
       div {
         overflow: hidden;
         text-overflow: ellipsis;
@@ -346,8 +344,9 @@ export default {
     }
 
     .amount {
-      min-width: 170px;
-      max-width: 170px;
+      min-width: clamp(145px, 11vw, 185px);
+      max-width: clamp(145px, 11vw, 185px);
+      font-size: clamp(14px, 0.95vw, 16px);
     }
 
     .txid {
@@ -356,15 +355,34 @@ export default {
     }
 
     .meta {
-      min-width: 230px;
+      min-width: clamp(190px, 16vw, 270px);
+      font-size: clamp(12px, 0.85vw, 14px);
     }
 
     .type {
-      min-width: 100px;
-      max-width: 100px;
+      min-width: clamp(88px, 7vw, 112px);
+      max-width: clamp(88px, 7vw, 112px);
+      font-size: clamp(13px, 0.9vw, 15px);
       div {
         margin-right: 8px;
       }
+    }
+  }
+}
+
+@media (max-width: 1050px) {
+  .tx-list .transaction {
+    .txid {
+      display: none;
+    }
+
+    .amount {
+      min-width: 140px;
+      max-width: 140px;
+    }
+
+    .meta {
+      min-width: 180px;
     }
   }
 }
