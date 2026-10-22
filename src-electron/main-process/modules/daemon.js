@@ -1,11 +1,20 @@
 import child_process from "child_process";
 
-const request = require("request-promise");
+// Resolve the concrete CommonJS entry at build time. Electron 11's bundled
+// Node.js cannot reliably resolve modern package "exports" from app.asar on
+// Windows.
+const axios = require("../../../node_modules/axios/dist/node/axios.cjs");
 const queue = require("promise-queue");
 const http = require("http");
 const fs = require("fs");
 const path = require("upath");
 const portscanner = require("portscanner");
+const {
+  LOCAL_DAEMON_START_TIMEOUT,
+  rpcErrorCause,
+  rpcTimeout,
+  startupTimedOut
+} = require("./rpc-safety");
 
 export class Daemon {
   constructor(backend) {
@@ -15,6 +24,8 @@ export class Daemon {
     this.id = 0;
     this.net_type = "mainnet";
     this.local = false; // do we have a local daemon ?
+    this.lastDeregisteredStakes = [];
+    this.heartbeatInFlight = false;
 
     this.agent = new http.Agent({ keepAlive: true, maxSockets: 1 });
     this.queue = new queue(1, Infinity);
@@ -29,29 +40,32 @@ export class Daemon {
   checkVersion() {
     return new Promise(resolve => {
       if (process.platform === "win32") {
-        let judecoind_path = path.join(__ryo_bin, "judecoind.exe");
-        let judecoind_version_cmd = `"${judecoind_path}" --version`;
-        if (!fs.existsSync(judecoind_path)) {
+        let daemonPath = path.join(__ryo_bin, "judecoind.exe");
+        if (!fs.existsSync(daemonPath)) {
           resolve(false);
+          return;
         }
-        child_process.exec(judecoind_version_cmd, (error, stdout) => {
+        child_process.execFile(daemonPath, ["--version"], (error, stdout) => {
           if (error) {
             resolve(false);
+            return;
           }
           resolve(stdout);
         });
       } else {
-        let judecoind_path = path.join(__ryo_bin, "judecoind");
-        let judecoind_version_cmd = `"${judecoind_path}" --version`;
-        if (!fs.existsSync(judecoind_path)) {
+        let daemonPath = path.join(__ryo_bin, "judecoind");
+        if (!fs.existsSync(daemonPath)) {
           resolve(false);
+          return;
         }
-        child_process.exec(
-          judecoind_version_cmd,
+        child_process.execFile(
+          daemonPath,
+          ["--version"],
           { detached: true },
           (error, stdout) => {
             if (error) {
               resolve(false);
+              return;
             }
             resolve(stdout);
           }
@@ -204,10 +218,19 @@ export class Daemon {
               }
             });
 
-            // To let caller know when the daemon is ready
-            // We can't apply timeout to this because the local daemon might be syncing in the background
+            // The RPC becomes available while the daemon continues syncing.
+            const startedAt = Date.now();
+            let checking = false;
             let intrvl = setInterval(() => {
-              this.sendRPC("get_info").then(data => {
+              if (startupTimedOut(startedAt, LOCAL_DAEMON_START_TIMEOUT)) {
+                clearInterval(intrvl);
+                this.killProcess();
+                reject(new Error("Timed out starting local daemon"));
+                return;
+              }
+              if (checking) return;
+              checking = true;
+              this.sendRPC("get_info", {}, { timeout: 5000 }).then(data => {
                 if (!data.hasOwnProperty("error")) {
                   this.startHeartbeat();
                   clearInterval(intrvl);
@@ -225,6 +248,7 @@ export class Daemon {
                     reject(new Error("Could not connect to local daemon"));
                   }
                 }
+                checking = false;
               });
             }, 1000);
           } else {
@@ -399,6 +423,8 @@ export class Daemon {
   }
 
   heartbeatAction() {
+    if (this.heartbeatInFlight) return;
+    this.heartbeatInFlight = true;
     let actions = [];
 
     // No difference between local and remote heartbeat action for now
@@ -408,22 +434,26 @@ export class Daemon {
       actions = [this.getRPC("info")];
     }
 
-    Promise.all(actions).then(data => {
-      let daemon_info = {};
-      for (let n of data) {
-        if (
-          n == undefined ||
-          !n.hasOwnProperty("result") ||
-          n.result == undefined
-        ) {
-          continue;
+    Promise.all(actions)
+      .then(data => {
+        let daemon_info = {};
+        for (let n of data) {
+          if (
+            n == undefined ||
+            !n.hasOwnProperty("result") ||
+            n.result == undefined
+          ) {
+            continue;
+          }
+          if (n.method == "get_info") {
+            daemon_info.info = n.result;
+          }
         }
-        if (n.method == "get_info") {
-          daemon_info.info = n.result;
-        }
-      }
-      this.sendGateway("set_daemon_data", daemon_info);
-    });
+        this.sendGateway("set_daemon_data", daemon_info);
+      })
+      .finally(() => {
+        this.heartbeatInFlight = false;
+      });
   }
 
   heartbeatSlowAction() {
@@ -470,21 +500,46 @@ export class Daemon {
     });
   }
 
-  updateServiceNodes() {
+  async updateServiceNodes() {
     const service_nodes = {
       fetching: true
     };
     this.sendGateway("set_daemon_data", { service_nodes });
-    this.getRPC("service_nodes").then(data => {
-      if (!data.hasOwnProperty("result")) return;
-      const nodes = data.result.service_node_states;
+    const data = await this.getRPC("service_nodes");
+    if (!data.result || !Array.isArray(data.result.service_node_states)) {
+      this.sendGateway("set_daemon_data", {
+        service_nodes: { fetching: false }
+      });
+      return false;
+    }
 
-      const service_nodes = {
+    const nodes = data.result.service_node_states;
+    const blacklistData = await this.sendRPC(
+      "get_service_node_blacklisted_key_images"
+    );
+    if (
+      blacklistData.result &&
+      Array.isArray(blacklistData.result.blacklist) &&
+      this.backend.walletd
+    ) {
+      try {
+        this.lastDeregisteredStakes = await this.backend.walletd.getDeregisteredStakes(
+          nodes,
+          blacklistData.result.blacklist
+        );
+      } catch (error) {
+        // Keep the last confirmed result; never infer deregistration on failure.
+      }
+    }
+
+    this.sendGateway("set_daemon_data", {
+      service_nodes: {
         nodes,
+        deregistered: this.lastDeregisteredStakes,
         fetching: false
-      };
-      this.sendGateway("set_daemon_data", { service_nodes });
+      }
     });
+    return true;
   }
 
   async getONSRecordsForOwners(owners) {
@@ -569,27 +624,23 @@ export class Daemon {
     const port = options.port || this.port;
 
     let requestOptions = {
-      uri: `${protocol}${hostname}:${port}/json_rpc`,
+      url: `${protocol}${hostname}:${port}/json_rpc`,
       method: "POST",
-      json: {
+      data: {
         jsonrpc: "2.0",
         id: id,
         method: method
       },
-      agent: this.agent
+      httpAgent: this.agent,
+      timeout: rpcTimeout(options.timeout)
     };
     if (Object.keys(params).length !== 0) {
-      requestOptions.json.params = params;
-    }
-
-    // If there's a timeout then set it
-    if (options.timeout) {
-      requestOptions.timeout = options.timeout;
+      requestOptions.data.params = params;
     }
 
     return this.queue.add(() => {
-      return request(requestOptions)
-        .then(response => {
+      return axios(requestOptions)
+        .then(({ data: response }) => {
           if (response.hasOwnProperty("error")) {
             return {
               method: method,
@@ -610,7 +661,7 @@ export class Daemon {
             error: {
               code: -1,
               message: "Cannot connect to daemon-rpc",
-              cause: error.cause
+              cause: rpcErrorCause(error)
             }
           };
         });
@@ -626,25 +677,39 @@ export class Daemon {
 
   quit() {
     clearInterval(this.heartbeat);
+    clearInterval(this.heartbeat_slow);
     return new Promise(resolve => {
-      if (this.daemonProcess) {
-        this.daemonProcess.on("close", () => {
-          this.agent.destroy();
-          clearTimeout(this.forceKill);
-          resolve();
-        });
-
-        // Force kill after 20 seconds
-        this.forceKill = setTimeout(() => {
-          if (this.daemonProcess) {
-            this.daemonProcess.kill("SIGKILL");
-          }
-        }, 20000);
-
-        const signal = this.isDaemonSyncing ? "SIGKILL" : "SIGTERM";
-        this.daemonProcess.kill(signal);
-      } else {
+      const daemonProcess = this.daemonProcess;
+      if (!daemonProcess) {
+        this.agent.destroy();
         resolve();
+        return;
+      }
+
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        clearTimeout(this.forceKill);
+        clearTimeout(this.forceResolve);
+        this.agent.destroy();
+        resolve();
+      };
+
+      daemonProcess.once("close", finish);
+      this.forceKill = setTimeout(() => {
+        try {
+          daemonProcess.kill("SIGKILL");
+        } catch (error) {
+          // The process may already have exited.
+        }
+      }, 5000);
+      this.forceResolve = setTimeout(finish, 8000);
+
+      try {
+        daemonProcess.kill(this.isDaemonSyncing ? "SIGKILL" : "SIGTERM");
+      } catch (error) {
+        finish();
       }
     });
   }

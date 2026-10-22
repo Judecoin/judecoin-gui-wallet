@@ -43,9 +43,9 @@ export default {
           (MAX_NUMBER_OF_CONTRIBUTORS - contributors_length);
       }
 
-      const minContributionJudecoin = minContributionAtomicUnits / 1e9;
+      const minContributionJude = minContributionAtomicUnits / 1e9;
       // ceiling to 4 decimal places
-      return minContributionJudecoin.toFixed(4);
+      return minContributionJude.toFixed(4);
     },
     openForContribution(node, addr = null) {
       let openContributionRemaining =
@@ -60,7 +60,7 @@ export default {
       }
       return openContributionRemaining;
     },
-    openForContributionJudecoin(node, addr = null) {
+    openForContributionJude(node, addr = null) {
       return (this.openForContribution(node, addr) / 1e9).toFixed(4);
     }
   }

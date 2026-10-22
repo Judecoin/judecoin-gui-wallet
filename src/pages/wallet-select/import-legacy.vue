@@ -17,23 +17,33 @@
       <q-field class="q-mt-none">
         <q-input
           v-model="wallet.name"
+          @input="$v.wallet.name.$reset()"
           float-label="New wallet name"
           :error="$v.wallet.name.$error"
           :dark="theme == 'dark'"
-          @blur="$v.wallet.name.$touch"
         />
       </q-field>
 
       <q-field>
         <div class="row gutter-sm">
           <div class="col-12">
-            <q-input v-model="wallet_path" stack-label="Wallet file" disable :dark="theme == 'dark'" />
+            <q-input
+              v-model="wallet_path"
+              stack-label="Wallet file"
+              disable
+              :dark="theme == 'dark'"
+            />
           </div>
         </div>
       </q-field>
 
       <q-field>
-        <q-input v-model="wallet.password" type="password" float-label="Password" :dark="theme == 'dark'" />
+        <q-input
+          v-model="wallet.password"
+          type="password"
+          float-label="Password"
+          :dark="theme == 'dark'"
+        />
       </q-field>
 
       <q-field>

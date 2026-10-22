@@ -1,8 +1,38 @@
-import { ipcRenderer } from "electron";
+import { ipcRenderer } from "src/electron-api";
 import { Notify, Dialog, Loading, LocalStorage } from "quasar";
-import { EventEmitter } from "events";
-import { SCEE } from "./SCEE-Node";
 import { i18n, changeLanguage } from "src/boot/i18n";
+const { emitAddressValidation } = require("src/utils/address-validation-event");
+
+class EventEmitter {
+  constructor() {
+    this.listeners = Object.create(null);
+  }
+
+  once(event, callback) {
+    if (typeof callback !== "function") return this;
+    const wrapped = (...args) => {
+      this.removeListener(event, wrapped);
+      callback(...args);
+    };
+    (this.listeners[event] || (this.listeners[event] = [])).push(wrapped);
+    return this;
+  }
+
+  removeListener(event, callback) {
+    const callbacks = this.listeners[event];
+    if (callbacks) {
+      this.listeners[event] = callbacks.filter(item => item !== callback);
+    }
+    return this;
+  }
+
+  emit(event, ...args) {
+    const callbacks = this.listeners[event];
+    if (!callbacks) return false;
+    callbacks.slice().forEach(callback => callback(...args));
+    return callbacks.length > 0;
+  }
+}
 
 export class Gateway extends EventEmitter {
   constructor(app, router) {
@@ -10,15 +40,26 @@ export class Gateway extends EventEmitter {
     this.app = app;
     this.router = router;
     this.token = null;
-    this.scee = new SCEE();
 
     // The wallet always opens in English; switching language via the
     // titlebar applies to the current session only (client requirement)
     this.setLanguage("en-us");
 
-    let theme = LocalStorage.has("theme")
-      ? LocalStorage.getItem("theme")
+    // Windows uninstallers normally retain Chromium's LocalStorage. Use a
+    // release-specific one-time marker so the first launch of this final
+    // 4.0.0 package is dark even when an older test build left a light-theme
+    // cache behind. After initialization, the user's theme choice is kept.
+    const darkDefaultMarker = "jude-4.0.0-dark-default-initialized";
+    const isDarkDefaultInitialized = LocalStorage.has(darkDefaultMarker);
+    const theme = isDarkDefaultInitialized
+      ? LocalStorage.has("theme")
+        ? LocalStorage.getItem("theme")
+        : "dark"
       : "dark";
+    if (!isDarkDefaultInitialized) {
+      LocalStorage.set("theme", "dark");
+      LocalStorage.set(darkDefaultMarker, true);
+    }
     this.app.store.commit("gateway/set_app_data", {
       config: {
         appearance: {
@@ -34,6 +75,7 @@ export class Gateway extends EventEmitter {
     );
 
     this.closeDialog = false;
+    ipcRenderer.send("renderer-ready", true);
 
     this.app.store.commit("gateway/set_app_data", {
       status: {
@@ -44,7 +86,10 @@ export class Gateway extends EventEmitter {
     ipcRenderer.on("initialize", (event, data) => {
       this.token = data.token;
       setTimeout(() => {
-        this.ws = new WebSocket("ws://127.0.0.1:" + data.port);
+        const token = encodeURIComponent(data.token);
+        this.ws = new WebSocket(
+          `ws://127.0.0.1:${data.port}/wallet?token=${token}`
+        );
         this.ws.addEventListener("open", () => {
           this.open();
         });
@@ -112,11 +157,9 @@ export class Gateway extends EventEmitter {
       method,
       data
     };
-    let encrypted_data = this.scee.encryptString(
-      JSON.stringify(message),
-      this.token
-    );
-    this.ws.send(encrypted_data);
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(message));
+    }
   }
 
   geti18n(key) {
@@ -124,11 +167,12 @@ export class Gateway extends EventEmitter {
   }
 
   receive(message) {
-    // should wrap this in a try catch, and if fail redirect to error screen
-    // shouldn't happen outside of dev environment
-    let decrypted_data = JSON.parse(
-      this.scee.decryptString(message, this.token)
-    );
+    let decrypted_data;
+    try {
+      decrypted_data = JSON.parse(message);
+    } catch (error) {
+      return;
+    }
 
     if (
       typeof decrypted_data !== "object" ||
@@ -148,7 +192,7 @@ export class Gateway extends EventEmitter {
         this.emit("has_password", decrypted_data.data);
         break;
       case "set_valid_address":
-        this.emit("validate_address", decrypted_data.data);
+        emitAddressValidation(this, decrypted_data.data);
         break;
       case "set_decrypt_record_result":
         this.emit("decrypt_record_result", decrypted_data.data);
@@ -260,7 +304,10 @@ export class Gateway extends EventEmitter {
           timeout: 1000,
           message: ""
         };
-        const { data } = decrypted_data;
+        const data =
+          decrypted_data.data && typeof decrypted_data.data === "object"
+            ? decrypted_data.data
+            : {};
         if (data.i18n) {
           notification.message = this.geti18n(data.i18n);
         }

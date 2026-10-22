@@ -236,7 +236,7 @@
           </div>
 
           <template v-if="modals.key_image.type == 'Export'">
-            <JudecoinField
+            <WalletField
               class="q-mt-lg"
               :label="$t('fieldLabels.keyImages.exportDirectory')"
               disable-hover
@@ -247,23 +247,13 @@
                 borderless
                 dense
               />
-              <input
-                id="keyImageExportPath"
-                ref="keyImageExportSelect"
-                class="image-path"
-                type="file"
-                webkitdirectory
-                directory
-                hidden
-                @change="setKeyImageExportPath"
-              />
               <q-btn color="primary" @click="selectKeyImageExportPath">{{
                 $t("buttons.browse")
               }}</q-btn>
-            </JudecoinField>
+            </WalletField>
           </template>
           <template v-if="modals.key_image.type == 'Import'">
-            <JudecoinField
+            <WalletField
               class="q-mt-lg"
               :label="$t('fieldLabels.keyImages.importFile')"
               disable-hover
@@ -274,18 +264,10 @@
                 borderless
                 dense
               />
-              <input
-                id="keyImageImportPath"
-                ref="keyImageImportSelect"
-                type="file"
-                class="image-path"
-                hidden
-                @change="setKeyImageImportPath"
-              />
               <q-btn color="primary" @click="selectKeyImageImportPath">{{
                 $t("buttons.browse")
               }}</q-btn>
-            </JudecoinField>
+            </WalletField>
           </template>
 
           <div class="q-mt-lg text-right">
@@ -317,17 +299,20 @@
           <q-input
             v-model="modals.change_password.old_password"
             type="password"
+            :dark="theme == 'dark'"
             :label="$t('fieldLabels.oldPassword')"
           />
           <q-input
             v-model="modals.change_password.new_password"
             type="password"
+            :dark="theme == 'dark'"
             :label="$t('fieldLabels.newPassword')"
           />
 
           <q-input
             v-model="modals.change_password.new_password_confirm"
             type="password"
+            :dark="theme == 'dark'"
             :label="$t('fieldLabels.confirmNewPassword')"
           />
 
@@ -360,7 +345,7 @@
         </div>
         <div class="q-ma-md">
           <template>
-            <JudecoinField
+            <WalletField
               class="q-mt-lg"
               :label="$t('fieldLabels.exportTransfers.exportDirectory')"
               disable-hover
@@ -371,20 +356,10 @@
                 borderless
                 dense
               />
-              <input
-                id="exportTransfersExportPath"
-                ref="exportTransfersExportSelect"
-                class="export-transfers-path"
-                type="file"
-                webkitdirectory
-                directory
-                hidden
-                @change="setExportTransfersExportPath"
-              />
               <q-btn color="primary" @click="selectExportTransfersExportPath">{{
                 $t("buttons.browse")
               }}</q-btn>
-            </JudecoinField>
+            </WalletField>
           </template>
 
           <div class="q-mt-lg text-right">
@@ -407,15 +382,26 @@
 </template>
 
 <script>
-const { clipboard } = require("electron");
+import { clipboard, walletDialog } from "src/electron-api";
 import { mapState } from "vuex";
 import WalletPassword from "src/mixins/wallet_password";
-import JudecoinField from "components/judecoin_field";
+import WalletField from "components/wallet_field";
+
+function joinLocalPath(base, ...segments) {
+  const separator = String(base).includes("\\") ? "\\" : "/";
+  return [base, ...segments]
+    .map((part, index) =>
+      index === 0
+        ? String(part).replace(/[\\/]+$/, "")
+        : String(part).replace(/^[\\/]+|[\\/]+$/g, "")
+    )
+    .join(separator);
+}
 
 export default {
   name: "WalletSettings",
   components: {
-    JudecoinField
+    WalletField
   },
   mixins: [WalletPassword],
   data() {
@@ -489,19 +475,18 @@ export default {
     }
   },
   created() {
-    const path = require("upath");
-    this.modals.key_image.export_path = path.join(
+    this.modals.key_image.export_path = joinLocalPath(
       this.wallet_data_dir,
       "images",
       this.info.name
     );
-    this.modals.key_image.import_path = path.join(
+    this.modals.key_image.import_path = joinLocalPath(
       this.wallet_data_dir,
       "images",
       this.info.name,
       "key_image_export"
     );
-    this.modals.export_transfers.export_path = path.join(
+    this.modals.export_transfers.export_path = joinLocalPath(
       this.wallet_data_dir,
       "CSV",
       this.info.name
@@ -517,12 +502,10 @@ export default {
     },
     copyPrivateKey(type, event) {
       event.stopPropagation();
-      for (let i = 0; i < event.path.length; i++) {
-        if (event.path[i].tagName == "BUTTON") {
-          event.path[i].blur();
-          break;
-        }
-      }
+      const eventPath =
+        typeof event.composedPath === "function" ? event.composedPath() : [];
+      const button = eventPath.find(item => item && item.tagName === "BUTTON");
+      if (button && typeof button.blur === "function") button.blur();
 
       if (this.secret[type] == null) {
         this.$q.notify({
@@ -630,23 +613,17 @@ export default {
         this.$gateway.send("wallet", "rescan_spent");
       }
     },
-    selectKeyImageExportPath() {
-      this.$refs.keyImageExportSelect.click();
+    async selectKeyImageExportPath() {
+      const selected = await walletDialog.selectDirectory();
+      if (selected) this.modals.key_image.export_path = selected;
     },
-    setKeyImageExportPath(file) {
-      this.modals.key_image.export_path = file.target.files[0].path;
+    async selectKeyImageImportPath() {
+      const selected = await walletDialog.selectFile();
+      if (selected) this.modals.key_image.import_path = selected;
     },
-    selectKeyImageImportPath() {
-      this.$refs.keyImageImportSelect.click();
-    },
-    setKeyImageImportPath(file) {
-      this.modals.key_image.import_path = file.target.files[0].path;
-    },
-    selectExportTransfersExportPath() {
-      this.$refs.exportTransfersExportSelect.click();
-    },
-    setExportTransfersExportPath(file) {
-      this.modals.export_transfers.export_path = file.target.files[0].path;
+    async selectExportTransfersExportPath() {
+      const selected = await walletDialog.selectDirectory();
+      if (selected) this.modals.export_transfers.export_path = selected;
     },
     async doKeyImages() {
       this.hideModal("key_image");
@@ -872,6 +849,17 @@ export default {
   > * {
     color: var(--jude-text);
   }
+
+  .q-field__native,
+  .q-field__input,
+  .q-field__label,
+  .q-icon {
+    color: var(--jude-text) !important;
+  }
+
+  .q-field__control:before {
+    border-color: var(--jude-border) !important;
+  }
 }
 
 .rescan-modal {
@@ -930,7 +918,7 @@ export default {
   min-width: 400px;
   width: 45vw;
 
-  .judecoin-field {
+  .wallet-field {
     flex: 1;
   }
 }

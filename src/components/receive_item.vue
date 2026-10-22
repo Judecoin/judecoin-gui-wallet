@@ -1,5 +1,5 @@
 <template>
-  <q-list class="judecoin-list-item" no-border @click.native="details(address)">
+  <q-list class="wallet-list-item" no-border @click.native="details(address)">
     <q-item>
       <q-item-section class="flex">
         <q-item-label class="ellipsis">{{ address.address }}</q-item-label>
@@ -42,12 +42,12 @@
         <q-item-section>
           <div class="row info-section">
             <span class="col-sm-4">
-              <span>{{ $t("strings.judecoinBalance") }}</span>
+              <span>{{ $t("strings.judeBalance") }}</span>
               <br />
               <span class="value">{{ address.balance | currency }}</span>
             </span>
             <span class="col-sm-4">
-              <span>{{ $t("strings.judecoinUnlockedBalance") }}</span>
+              <span>{{ $t("strings.judeUnlockedBalance") }}</span>
               <br />
               <span class="value">{{
                 address.unlocked_balance | currency

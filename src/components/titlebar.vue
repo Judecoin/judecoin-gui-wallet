@@ -79,7 +79,7 @@
 </template>
 
 <script>
-import { remote } from "electron";
+import { walletWindow } from "src/electron-api";
 import { mapState } from "vuex";
 import { languages } from "src/i18n";
 
@@ -104,7 +104,7 @@ export default {
   },
   data() {
     return {
-      isMaximized: remote.getCurrentWindow().isMaximized(),
+      isMaximized: walletWindow.isMaximized(),
       languages
     };
   },
@@ -120,22 +120,19 @@ export default {
   },
   methods: {
     updateMaximized() {
-      this.isMaximized = remote.getCurrentWindow().isMaximized();
+      this.isMaximized = walletWindow.isMaximized();
     },
     minimize() {
-      remote.getCurrentWindow().minimize();
+      walletWindow.minimize();
     },
     toggleMaximize() {
-      const win = remote.getCurrentWindow();
-      if (win.isMaximized()) {
-        win.unmaximize();
-      } else {
-        win.maximize();
-      }
-      this.isMaximized = win.isMaximized();
+      walletWindow.toggleMaximize();
+      setTimeout(() => {
+        this.isMaximized = walletWindow.isMaximized();
+      }, 50);
     },
     close() {
-      remote.getCurrentWindow().close();
+      walletWindow.close();
     },
     setLanguage(lang) {
       this.$gateway.send("core", "set_language", { lang });
@@ -181,7 +178,7 @@ export default {
 
   .titlebar-title {
     text-align: center;
-    font-size: 14px;
+    font-size: clamp(13px, 0.85vw, 15px);
     font-weight: 500;
 
     .titlebar-brand-logo {

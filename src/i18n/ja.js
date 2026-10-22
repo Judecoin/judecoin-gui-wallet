@@ -217,6 +217,8 @@ export default {
       title: "サービスノードのロック解除",
       confirmTitle: "ロック解除の確認",
       message: "サービスノードをロック解除しますか？",
+      confirmMessage:
+        "共有ノードのこのステークをロック解除しようとしています。サービスノードは無効化の予定に入り、期限切れになるまで報酬を受け取り続けます。続行しますか？",
       ok: "ロック解除"
     },
     unlockServiceNodeWarning: {
@@ -372,6 +374,7 @@ export default {
       signatureCopied: "署名をクリップボードにコピーしました",
       signatureVerified: "署名が検証されました",
       stakeSuccess: "ステーキングに成功しました",
+      unlockServiceNodeSuccess: "サービスノードのロック解除に成功しました",
       transactionNotesSaved: "トランザクションメモが保存されました",
       walletCopied: "ウォレットアドレスをクリップボードにコピーしました"
     },
@@ -546,12 +549,12 @@ export default {
     hardwareWallet: "ハードウェアウォレット",
     hardwareWallets: "ハードウェアウォレット",
     loadingSettings: "設定を読み込み中",
-    judecoinBalance: "残高",
+    judeBalance: "残高",
     lokinetNameDescription:
       "Lokinetの名前を購入または更新します。名前を購入した場合、リストに表示されるまで1〜2分かかる場合があります。Lokinetの詳細については、こちらをご覧ください：",
-    judecoinAccumulatedRewards: "累積報酬",
-    judecoinUnlockedBalance: "ロック解除済み残高",
-    judecoinUnlockedShort: "ロック解除済み",
+    judeAccumulatedRewards: "累積報酬",
+    judeUnlockedBalance: "ロック解除済み残高",
+    judeUnlockedShort: "ロック解除済み",
     me: "自分",
     noTransactionsFound: "トランザクションが見つかりません",
     notes: "メモ",
@@ -581,17 +584,25 @@ export default {
     saveToAddressBook: "アドレス帳に保存",
     seedWords: "シードワード",
     selectLanguage: "言語を選択",
-    registrationStakingMigrationJudecoinToSessionToken:
+    registrationStakingMigrationJudeToSessionToken:
       "JudeからSession Tokenへの移行に伴い、新しいサービスノードへの登録とステーキングは無効になっています。詳細はこちら：",
     serviceNodeContributionDescription:
-      "ステーキングはJudecoinネットワークの安全性に貢献します。貢献に対してJUDEを獲得できます。ステーキング後、JUDEのロック解除には180日の待機が必要です。ステーキングの詳細については、こちらをご覧ください",
+      "ステーキングはJudecoinネットワークの安全性に貢献します。貢献に対してJUDEを獲得できます。ステーキングの詳細については、こちらをご覧ください",
     serviceNodeRegistrationDescription:
       "「{prepareCommand}」コマンドを使用してサービスノードとして登録するデーモンが生成した{registerCommand}コマンドを入力してください",
     serviceNodeStartStakingDescription:
       "ステーキングを開始するには、ステーキングタブをご覧ください",
     noServiceNodesCurrentlyAvailable:
       "現在、貢献可能なサービスノードはありません",
+    serviceNodeStatus: {
+      active: "稼働中",
+      decommissioned: "一時停止中",
+      unlocking: "ロック解除中",
+      awaitingContributions: "拠出待ち",
+      deregistered: "登録解除済み"
+    },
     serviceNodeDetails: {
+      status: "状態",
       contributors: "貢献者",
       lastRewardBlockHeight: "最後の報酬ブロック高",
       lastUptimeProof: "最後の稼働証明",
@@ -627,6 +638,7 @@ export default {
     transactionConfirmed: "確認済み",
     transactions: {
       amount: "金額",
+      confirmations: "確認数",
       description: "{type}トランザクション",
       fee: "手数料",
       paidBySender: "送信者負担",
@@ -641,8 +653,8 @@ export default {
         pending: "保留中",
         pendingIncoming: "入金保留中",
         pendingOutgoing: "出金保留中",
-        miner: "マイナー",
-        serviceNode: "サービスノード",
+        miner: "ブロック報酬",
+        serviceNode: "ブロック報酬",
         governance: "ガバナンス",
         stake: "ステーキング",
         failed: "失敗"

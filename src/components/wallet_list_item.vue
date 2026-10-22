@@ -21,7 +21,7 @@
 </template>
 
 <script>
-const { clipboard } = require("electron");
+import { clipboard } from "src/electron-api";
 import { mapState } from "vuex";
 export default {
   name: "WalletListItem",
@@ -40,15 +40,8 @@ export default {
     info: state => state.gateway.wallet.info
   }),
   methods: {
-    copyAddress() {
-      event.stopPropagation();
-      for (let i = 0; i < event.path.length; i++) {
-        if (event.path[i].tagName == "BUTTON") {
-          event.path[i].blur();
-          break;
-        }
-      }
-      clipboard.writeText(this.wallet.address);
+    copyAddress(address) {
+      clipboard.writeText(address || this.wallet.address);
       this.$q.notify({
         type: "positive",
         timeout: 1000,

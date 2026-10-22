@@ -122,7 +122,6 @@ export default {
     info: {
       alt_blocks_count: 0,
       cumulative_difficulty: 0,
-      difficulty: 0,
       grey_peerlist_size: 0,
       height: 0,
       height_without_bootstrap: 0,
@@ -143,6 +142,7 @@ export default {
     tx_pool_backlog: [],
     service_nodes: {
       nodes: [],
+      deregistered: [],
       fetching: true
     }
   },

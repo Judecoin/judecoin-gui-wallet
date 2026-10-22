@@ -177,6 +177,8 @@ export default {
       title: "Liberar nodo de servicio",
       confirmTitle: "Confirmar liberación",
       message: "¿Desea liberar el nodo de servicio?",
+      confirmMessage:
+        "Está solicitando desbloquear esta participación en un nodo compartido. Esto programará la desactivación del nodo de servicio. Continuará recibiendo recompensas hasta que el nodo expire. ¿Desea continuar?",
       ok: "LIBERAR"
     },
     unlockServiceNodeWarning: {
@@ -300,6 +302,7 @@ export default {
       sendSuccess: "Transacción enviada correctamente",
       signatureCopied: "Firma copiada al portapapeles",
       stakeSuccess: "Participación retenida correctamente",
+      unlockServiceNodeSuccess: "Nodo de servicio desbloqueado correctamente",
       transactionNotesSaved: "Notas de la transacción guardadas"
     },
     errors: {
@@ -430,9 +433,9 @@ export default {
     destinationUnknown: "Destino Desconocido",
     editAddressBookEntry: "Modificar un registro de la libreta de direcciones",
     loadingSettings: "Cargando configuración",
-    judecoinBalance: "Saldo",
-    judecoinUnlockedBalance: "Saldo libre",
-    judecoinUnlockedShort: "Libre",
+    judeBalance: "Saldo",
+    judeUnlockedBalance: "Saldo libre",
+    judeUnlockedShort: "Libre",
     noTransactionsFound: "No se han encontrado transacciones",
     notes: "Notas",
     numberOfUnspentOutputs: "Número de salidas no gastadas",
@@ -476,6 +479,7 @@ export default {
     transactionConfirmed: "confirmada",
     transactions: {
       amount: "Cantidad",
+      confirmations: "Confirmaciones",
       description: "Transacción {type}",
       fee: "Comisión",
       paidBySender: "pagada por el remitente",
@@ -490,8 +494,8 @@ export default {
         pending: "Pendiente",
         pendingIncoming: "Recibida pendiente",
         pendingOutgoing: "Emitida pendiente",
-        miner: "Minería",
-        serviceNode: "Nodo de Servicio",
+        miner: "Recompensa de bloque",
+        serviceNode: "Recompensa de bloque",
         governance: "Gobernanza",
         stake: "Participación retenida",
         failed: "Fallida"

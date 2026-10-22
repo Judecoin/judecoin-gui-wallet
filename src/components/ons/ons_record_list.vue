@@ -3,7 +3,7 @@
     <q-item
       v-for="record in recordList"
       :key="record.name_hash"
-      class="judecoin-list-item"
+      class="wallet-list-item"
     >
       <q-item-section class="type" avatar>
         <q-icon :name="isLocked(record) ? 'lock' : 'lock_open'" size="24px" />
@@ -66,12 +66,22 @@
 import { mapState } from "vuex";
 import { i18n } from "boot/i18n";
 import ContextMenu from "components/menus/contextmenu";
-const { clipboard } = require("electron");
+import { clipboard } from "src/electron-api";
 
 export default {
   name: "ONSRecordList",
   components: {
     ContextMenu
+  },
+  filters: {
+    blockHeight(value) {
+      const heightString = i18n.t("strings.blockHeight");
+      return `${heightString}: ${value}`;
+    },
+    expirationHeight(value) {
+      const expirationHeightString = i18n.t("strings.expirationHeight");
+      return `${expirationHeightString}: ${value}`;
+    }
   },
   props: {
     recordList: {
@@ -86,16 +96,6 @@ export default {
   computed: mapState({
     theme: state => state.gateway.app.config.appearance.theme
   }),
-  filters: {
-    blockHeight(value) {
-      const heightString = i18n.t("strings.blockHeight");
-      return `${heightString}: ${value}`;
-    },
-    expirationHeight(value) {
-      const expirationHeightString = i18n.t("strings.expirationHeight");
-      return `${expirationHeightString}: ${value}`;
-    }
-  },
   methods: {
     isLocked(record) {
       return !record.name || !record.value;

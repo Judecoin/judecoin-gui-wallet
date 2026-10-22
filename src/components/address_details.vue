@@ -35,10 +35,10 @@
                 <div class="infoBox">
                   <div class="infoBoxContent">
                     <div class="text">
-                      <span>{{ $t("strings.judecoinBalance") }}</span>
+                      <span>{{ $t("strings.judeBalance") }}</span>
                     </div>
                     <div class="value">
-                      <span><FormatJudecoin :amount="address.balance"/></span>
+                      <span><FormatJude :amount="address.balance"/></span>
                     </div>
                   </div>
                 </div>
@@ -46,11 +46,11 @@
                 <div class="infoBox">
                   <div class="infoBoxContent">
                     <div class="text">
-                      <span>{{ $t("strings.judecoinUnlockedBalance") }}</span>
+                      <span>{{ $t("strings.judeUnlockedBalance") }}</span>
                     </div>
                     <div class="value">
                       <span
-                        ><FormatJudecoin :amount="address.unlocked_balance"
+                        ><FormatJude :amount="address.unlocked_balance"
                       /></span>
                     </div>
                   </div>
@@ -73,7 +73,7 @@
                 <div class="infoBox">
                   <div class="infoBoxContent">
                     <div class="text">
-                      <span>{{ $t("strings.judecoinBalance") }}</span>
+                      <span>{{ $t("strings.judeBalance") }}</span>
                     </div>
                     <div class="value"><span>N/A</span></div>
                   </div>
@@ -82,7 +82,7 @@
                 <div class="infoBox">
                   <div class="infoBoxContent">
                     <div class="text">
-                      <span>{{ $t("strings.judecoinUnlockedBalance") }}</span>
+                      <span>{{ $t("strings.judeUnlockedBalance") }}</span>
                     </div>
                     <div class="value"><span>N/A</span></div>
                   </div>
@@ -160,9 +160,9 @@
 
 <script>
 import { mapState } from "vuex";
-const { clipboard, nativeImage } = require("electron");
+import { clipboard, nativeImage } from "src/electron-api";
 import AddressHeader from "components/address_header";
-import FormatJudecoin from "components/format_judecoin";
+import FormatJude from "components/format_jude";
 import QrcodeVue from "qrcode.vue";
 import TxList from "components/tx_list";
 export default {
@@ -170,7 +170,7 @@ export default {
   components: {
     AddressHeader,
     TxList,
-    FormatJudecoin,
+    FormatJude,
     QrcodeVue
   },
   data() {

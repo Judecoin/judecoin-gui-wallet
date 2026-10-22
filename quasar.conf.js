@@ -135,6 +135,9 @@ module.exports = function() {
     },
     electron: {
       bundler: "builder", // or "packager"
+      // The renderer uses only the context-isolated preload API.
+      // This also prevents Quasar from injecting require("electron").
+      nodeIntegration: false,
       extendWebpack() {
         // cfg
         // do something with Electron process Webpack cfg
@@ -142,13 +145,7 @@ module.exports = function() {
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
 
-        // OS X / Mac App Store
-        // appBundleId: "",
-        // appCategoryType: "",
-        // osxSign: "",
-        // protocol: "myapp://path",
-
-        // Window only
+        // Windows only
         // win32metadata: { ... }
 
         extraResource: ["bin"]
@@ -161,13 +158,33 @@ module.exports = function() {
         copyright: "Copyright © 2024-2026 Judecoin Community",
         artifactName: "jude-wallet-gui-${version}-${os}.${ext}",
 
+        win: {
+          target: ["nsis"],
+          icon: "src-electron/icons/icon.ico",
+          executableName: "jude-wallet-gui",
+          extraResources: [
+            { from: "bin/win32", to: "bin" },
+            { from: "src-electron/icons/icon.ico", to: "Jude-Wallet.ico" }
+          ]
+        },
+
         linux: {
           target: ["AppImage", "deb"],
-          icon: "jude-desktop-wallet.png",
-          category: "Finance"
+          executableName: "jude-wallet-gui",
+          icon: "src-electron/icons/linux",
+          category: "Finance",
+          maintainer: "Judecoin Community",
+          syncDesktopName: true,
+          extraResources: [{ from: "bin/linux", to: "bin" }]
         },
         // see https://www.electron.build/configuration/linux#debian-package-options
         deb: {
+          packageName: "jude-wallet-gui",
+          fpm: [
+            "--replaces=jude-desktop-wallet",
+            "--conflicts=jude-desktop-wallet",
+            "--provides=jude-desktop-wallet"
+          ],
           depends: [
             "libgtk-3-0",
             "libnotify4",
@@ -182,39 +199,28 @@ module.exports = function() {
           ]
         },
 
-        mac: {
-          // We need zip for auto-updating
-          // Ref: https://github.com/electron-userland/electron-builder/issues/2199
-          target: ["dmg", "zip"],
-          icon: "src-electron/icons/icon.icns",
-          category: "public.app-category.finance",
-          // Notarizing: https://kilianvalkhof.com/2019/electron/notarizing-your-electron-application/
-          hardenedRuntime: true,
-          gatekeeperAssess: false,
-          entitlements: "build/entitlements.mac.plist",
-          entitlementsInherit: "build/entitlements.mac.plist"
-        },
-
-        dmg: {
-          background: "src-electron/build/judecoin-dmg.tiff",
-          sign: false
-        },
-
         nsis: {
           oneClick: false,
-          allowToChangeInstallationDirectory: true
+          allowToChangeInstallationDirectory: true,
+          createDesktopShortcut: "always",
+          createStartMenuShortcut: true,
+          shortcutName: "Jude Wallet",
+          runAfterFinish: true,
+          include: "packaging/windows/shortcut-icon.nsh"
         },
 
         files: [
           "!build/*.js",
           "!.env",
-          "!.npmrc",
           "!dev-app-update.yml",
           "!downloads/**",
-          "!dist/**"
-        ],
-
-        extraResources: ["bin"]
+          "!dist/**",
+          "!**/*.map",
+          "!**/{test,tests}/**/*",
+          "!**/{example,examples}/**/*",
+          "!**/docs/**/*",
+          "!**/.github/**/*"
+        ]
       }
     }
   };

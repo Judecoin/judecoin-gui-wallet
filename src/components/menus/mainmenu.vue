@@ -30,7 +30,7 @@
     <q-dialog ref="aboutModal" minimized>
       <div class="about-modal">
         <img
-          src="jude-assets/brand/03-about-banner.png"
+          :src="aboutBanner"
           style="width: 100%; max-width: 400px;"
           class="q-mb-md"
         />
@@ -51,6 +51,7 @@
 
 <script>
 import { version } from "../../../package.json";
+import { formatDaemonProtocolVersion } from "src/daemon-version";
 import { mapState } from "vuex";
 import SettingsModal from "components/settings";
 export default {
@@ -72,10 +73,15 @@ export default {
   },
   computed: mapState({
     theme: state => state.gateway.app.config.appearance.theme,
+    aboutBanner() {
+      return this.theme === "light"
+        ? "jude-assets/brand/03-about-banner-light.png"
+        : "jude-assets/brand/03-about-banner-dark.png";
+    },
     isRPCSyncing: state => state.gateway.wallet.isRPCSyncing,
     daemon: state => state.gateway.daemon,
     daemonVersion() {
-      return this.daemon.info.version || "N/A";
+      return formatDaemonProtocolVersion(this.daemon.info.version);
     }
   }),
   mounted() {

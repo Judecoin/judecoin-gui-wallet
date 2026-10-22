@@ -176,6 +176,8 @@ export default {
       title: "Разблокировать сервисную ноду",
       confirmTitle: "Подтверждение разблокировки",
       message: "Вы уверены, что хотите разблокировать сервисную ноду?",
+      confirmMessage:
+        "Вы запрашиваете разблокировку этой доли в общем сервисном узле. Сервисный узел будет запланирован к деактивации. Вы продолжите получать награды до истечения срока работы узла. Продолжить?",
       ok: "РАЗБЛОКИРОВАТЬ"
     },
     unlockServiceNodeWarning: {
@@ -299,6 +301,7 @@ export default {
       sendSuccess: "Транзакция успешно отправлена",
       signatureCopied: "Signature copied to clipboard",
       stakeSuccess: "Стейк успешно начат",
+      unlockServiceNodeSuccess: "Сервисная нода успешно разблокирована",
       transactionNotesSaved: "Заметка о транзакции сохранена"
     },
     errors: {
@@ -430,9 +433,9 @@ export default {
     destinationUnknown: "Назначение Неизвестно",
     editAddressBookEntry: "Редактировать запись адресной книги",
     loadingSettings: "Загрузка настроек",
-    judecoinBalance: "Баланс",
-    judecoinUnlockedBalance: "Разблокированый баланс",
-    judecoinUnlockedShort: "Разблокировано",
+    judeBalance: "Баланс",
+    judeUnlockedBalance: "Разблокированый баланс",
+    judeUnlockedShort: "Разблокировано",
     noTransactionsFound: "Транзакции не найдены",
     notes: "Заметки",
     numberOfUnspentOutputs: "Количество непотраченных выходов",
@@ -477,6 +480,7 @@ export default {
     transactionConfirmed: "подтверждено",
     transactions: {
       amount: "Сумма",
+      confirmations: "Подтверждения",
       description: "Транзакция: {type}",
       fee: "Комиссия",
       paidBySender: "оплачивается отправителем",
@@ -491,8 +495,8 @@ export default {
         pending: "Ожидающие",
         pendingIncoming: "Ожидающие входящие",
         pendingOutgoing: "Ожидающие исходящие",
-        miner: "Майнинг",
-        serviceNode: "Сервисная Нода",
+        miner: "Награда за блок",
+        serviceNode: "Награда за блок",
         governance: "Управление",
         stake: "Стейк",
         failed: "Не удавшиеся"

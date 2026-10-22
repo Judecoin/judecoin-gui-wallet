@@ -1,21 +1,21 @@
 <template>
   <div class="ons-record-list">
     <div v-if="needsDecryption" class="decrypt row justify-between items-end">
-      <JudecoinField
+      <WalletField
         :label="$t('fieldLabels.decryptRecord')"
         :disable="decrypting"
         :error="$v.name.$error"
       >
         <q-input
           v-model.trim="name"
+          @input="$v.name.$reset()"
           :dark="theme == 'dark'"
           borderless
           dense
           :placeholder="$t('placeholders.onsDecryptName')"
           :disable="decrypting"
-          @blur="$v.name.$touch"
         />
-      </JudecoinField>
+      </WalletField>
       <div class="btn-wrapper q-ml-md row items-center">
         <q-btn
           color="primary"
@@ -59,14 +59,14 @@
 
 <script>
 import { mapState } from "vuex";
-import JudecoinField from "components/judecoin_field";
+import WalletField from "components/wallet_field";
 import { session_name_or_lokinet_name } from "src/validators/common";
 import ONSRecordList from "./ons_record_list";
 
 export default {
   name: "ONSRecords",
   components: {
-    JudecoinField,
+    WalletField,
     ONSRecordList
   },
   data() {
@@ -74,9 +74,6 @@ export default {
       name: "",
       decrypting: false
     };
-  },
-  mounted() {
-    this.$gateway.send("wallet", "ons_known_names");
   },
   computed: mapState({
     theme: state => state.gateway.app.config.appearance.theme,
@@ -104,6 +101,9 @@ export default {
       return records.find(r => this.isLocked(r));
     }
   }),
+  mounted() {
+    this.$gateway.send("wallet", "ons_known_names");
+  },
   methods: {
     records_of_type(state, type) {
       // receives the type and returns the records of that type
@@ -212,7 +212,7 @@ export default {
     cursor: default;
   }
 
-  .judecoin-field {
+  .wallet-field {
     flex: 1;
   }
 

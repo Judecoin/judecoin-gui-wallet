@@ -1,0 +1,36 @@
+appId: com.jude.desktop-wallet
+productName: jude-wallet-gui
+copyright: Copyright © 2024-2026 Judecoin Community
+electronVersion: 41.10.3
+npmRebuild: false
+artifactName: Jude-Wallet-gui-4.0.0-Windows-x64.${ext}
+directories:
+  app: dist/electron/UnPackaged
+  output: dist/electron/Packaged
+files:
+  - "**/*"
+  - "!**/*.map"
+  - "!**/{test,tests}/**/*"
+  - "!**/{example,examples}/**/*"
+  - "!**/docs/**/*"
+  - "!**/.github/**/*"
+extraResources:
+  - from: bin/win32
+    to: bin
+  - from: src-electron/icons/icon.ico
+    to: Jude-Wallet.ico
+win:
+  executableName: jude-wallet-gui
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: src-electron/icons/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: Jude Wallet
+  runAfterFinish: true
+  include: packaging/windows/shortcut-icon.nsh

@@ -2,7 +2,7 @@
   <div class="ons-input-form">
     <!-- Type -->
     <div class="col q-mt-sm">
-      <JudecoinField :label="$t('fieldLabels.onsType')" :disable="updating">
+      <WalletField :label="$t('fieldLabels.onsType')" :disable="updating">
         <q-select
           v-model.trim="record.type"
           emit-value
@@ -12,17 +12,18 @@
           borderless
           dense
         />
-      </JudecoinField>
+      </WalletField>
     </div>
     <!-- Name -->
     <div class="col q-mt-sm">
-      <JudecoinField
+      <WalletField
         :label="$t('fieldLabels.name')"
         :disable="disableName"
         :error="$v.record.name.$error"
       >
         <q-input
           v-model.trim="record.name"
+          @input="$v.record.name.$reset()"
           :dark="theme == 'dark'"
           :placeholder="$t('placeholders.onsName')"
           :disable="disableName"
@@ -31,20 +32,20 @@
           :suffix="
             record.type === 'session' || record.type === 'wallet' ? '' : '.loki'
           "
-          @blur="$v.record.name.$touch"
         />
-      </JudecoinField>
+      </WalletField>
     </div>
 
     <!-- Value (Session ID, Wallet Address or .loki address) -->
     <div class="col q-mt-sm">
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="value_field_label"
         :error="$v.record.value.$error"
       >
         <q-input
           v-model.trim="record.value"
+          @input="$v.record.value.$reset()"
           :dark="theme == 'dark'"
           :placeholder="value_placeholder"
           borderless
@@ -53,14 +54,13 @@
           :suffix="
             record.type === 'session' || record.type === 'wallet' ? '' : '.loki'
           "
-          @blur="$v.record.value.$touch"
         />
-      </JudecoinField>
+      </WalletField>
     </div>
 
     <!-- Owner -->
     <div class="col q-mt-sm">
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="$t('fieldLabels.owner')"
         :error="$v.record.owner.$error"
@@ -68,19 +68,19 @@
       >
         <q-input
           v-model.trim="record.owner"
+          @input="$v.record.owner.$reset()"
           :dark="theme == 'dark'"
           :placeholder="owner_placeholder"
           borderless
           dense
           :disable="renewing"
-          @blur="$v.record.owner.$touch"
         />
-      </JudecoinField>
+      </WalletField>
     </div>
 
     <!-- Backup owner -->
     <div class="col q-mt-sm">
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="$t('fieldLabels.backupOwner')"
         :error="$v.record.backup_owner.$error"
@@ -88,14 +88,14 @@
       >
         <q-input
           v-model.trim="record.backup_owner"
+          @input="$v.record.backup_owner.$reset()"
           :dark="theme == 'dark'"
           :placeholder="$t('placeholders.onsBackupOwner')"
           :disable="renewing"
           borderless
           dense
-          @blur="$v.record.backup_owner.$touch"
         />
-      </JudecoinField>
+      </WalletField>
     </div>
     <div class="buttons">
       <q-btn
@@ -123,13 +123,13 @@ import {
   lokinet_name,
   session_name
 } from "src/validators/common";
-import JudecoinField from "components/judecoin_field";
+import WalletField from "components/wallet_field";
 import WalletPassword from "src/mixins/wallet_password";
 
 export default {
   name: "ONSInputForm",
   components: {
-    JudecoinField
+    WalletField
   },
   mixins: [WalletPassword],
   props: {

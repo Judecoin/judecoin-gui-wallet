@@ -1,21 +1,21 @@
 <template>
   <q-page class="create-wallet">
     <div class="fields q-mx-md q-mt-md">
-      <JudecoinField
+      <WalletField
         :label="$t('fieldLabels.walletName')"
         :error="$v.wallet.name.$error"
       >
         <q-input
           v-model="wallet.name"
+          @input="$v.wallet.name.$reset()"
           :dark="theme == 'dark'"
           borderless
           dense
           @keyup.enter="create"
-          @blur="$v.wallet.name.$touch"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField :label="$t('fieldLabels.password')">
+      <WalletField :label="$t('fieldLabels.password')">
         <q-input
           v-model="wallet.password"
           type="password"
@@ -25,9 +25,9 @@
           dense
           @keyup.enter="create"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField :label="$t('fieldLabels.confirmPassword')">
+      <WalletField :label="$t('fieldLabels.confirmPassword')">
         <q-input
           v-model="wallet.password_confirm"
           type="password"
@@ -36,7 +36,7 @@
           dense
           @keyup.enter="create"
         />
-      </JudecoinField>
+      </WalletField>
 
       <!-- hardware wallet checkbox removed 2026-07-11: upstream dead interface,
            no USB/HID driver support exists in this project -->
@@ -54,10 +54,10 @@
 <script>
 import { required } from "vuelidate/lib/validators";
 import { mapState } from "vuex";
-import JudecoinField from "components/judecoin_field";
+import WalletField from "components/wallet_field";
 export default {
   components: {
-    JudecoinField
+    WalletField
   },
   data() {
     const languageOptions = [

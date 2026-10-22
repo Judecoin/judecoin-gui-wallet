@@ -4,30 +4,30 @@
       <q-field class="q-mt-none">
         <q-input
           v-model="wallet.name"
+          @input="$v.wallet.name.$reset()"
           float-label="Wallet name"
           :error="$v.wallet.name.$error"
           :dark="theme == 'dark'"
-          @blur="$v.wallet.name.$touch"
         />
       </q-field>
 
       <q-field>
         <q-input
           v-model="wallet.address"
+          @input="$v.wallet.address.$reset()"
           float-label="Wallet address"
           :error="$v.wallet.address.$error"
           :dark="theme == 'dark'"
-          @blur="$v.wallet.address.$touch"
         />
       </q-field>
 
       <q-field>
         <q-input
           v-model="wallet.viewkey"
+          @input="$v.wallet.viewkey.$reset()"
           float-label="Private viewkey"
           :error="$v.wallet.viewkey.$error"
           :dark="theme == 'dark'"
-          @blur="$v.wallet.viewkey.$touch"
         />
       </q-field>
 
@@ -48,12 +48,12 @@
             <template v-else-if="wallet.refresh_type == 'height'">
               <q-input
                 v-model="wallet.refresh_start_height"
+                @input="$v.wallet.refresh_start_height.$reset()"
                 type="number"
                 min="0"
                 float-label="Restore from block height"
                 :error="$v.wallet.refresh_start_height.$error"
                 :dark="theme == 'dark'"
-                @blur="$v.wallet.refresh_start_height.$touch"
               />
             </template>
           </div>
@@ -89,7 +89,12 @@
       </q-field>
 
       <q-field>
-        <q-input v-model="wallet.password" type="password" float-label="Password" :dark="theme == 'dark'" />
+        <q-input
+          v-model="wallet.password"
+          type="password"
+          float-label="Password"
+          :dark="theme == 'dark'"
+        />
       </q-field>
 
       <q-field>
@@ -102,7 +107,11 @@
       </q-field>
 
       <q-field>
-        <q-btn color="primary" label="Restore view-only wallet" @click="restore_view_wallet" />
+        <q-btn
+          color="primary"
+          label="Restore view-only wallet"
+          @click="restore_view_wallet"
+        />
       </q-field>
     </div>
   </q-page>

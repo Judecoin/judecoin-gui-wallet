@@ -1,65 +1,65 @@
 <template>
   <q-page>
     <div class="q-mx-md">
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="$t('fieldLabels.walletName')"
         :error="$v.wallet.name.$error"
       >
         <q-input
           v-model="wallet.name"
+          @input="$v.wallet.name.$reset()"
           borderless
           dense
           @keyup.enter="restore"
-          @blur="$v.wallet.name.$touch"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="$t('fieldLabels.walletAddress')"
         :error="$v.wallet.address.$error"
       >
         <q-input
           v-model="wallet.address"
+          @input="$v.wallet.address.$reset()"
           :placeholder="$t('placeholders.publicWalletAddress')"
           borderless
           dense
-          @blur="$v.wallet.address.$touch"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="$t('fieldLabels.privateViewKey')"
         :error="$v.wallet.viewkey.$error"
       >
         <q-input
           v-model="wallet.viewkey"
+          @input="$v.wallet.viewkey.$reset()"
           :placeholder="$t('placeholders.hexCharacters', { count: 64 })"
           borderless
           dense
-          @blur="$v.wallet.viewkey.$touch"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField
+      <WalletField
         class="q-mt-md"
         :label="$t('fieldLabels.privateSpendKey')"
         :error="$v.wallet.spendkey.$error"
       >
         <q-input
           v-model="wallet.spendkey"
+          @input="$v.wallet.spendkey.$reset()"
           :placeholder="$t('placeholders.hexCharacters', { count: 64 })"
           borderless
           dense
-          @blur="$v.wallet.spendkey.$touch"
         />
-      </JudecoinField>
+      </WalletField>
 
       <div class="row items-end q-mt-md">
         <div class="col-md-9 col-sm-8">
-          <JudecoinField
+          <WalletField
             v-if="wallet.refresh_type == 'date'"
             :label="$t('fieldLabels.restoreFromDate')"
           >
@@ -93,22 +93,22 @@
                 </q-icon>
               </template>
             </q-input>
-          </JudecoinField>
-          <JudecoinField
+          </WalletField>
+          <WalletField
             v-else-if="wallet.refresh_type == 'height'"
             :label="$t('fieldLabels.restoreFromBlockHeight')"
             :error="$v.wallet.refresh_start_height.$error"
           >
             <q-input
               v-model="wallet.refresh_start_height"
+              @input="$v.wallet.refresh_start_height.$reset()"
               type="number"
               min="0"
               :dark="theme == 'dark'"
               borderless
               dense
-              @blur="$v.wallet.refresh_start_height.$touch"
             />
-          </JudecoinField>
+          </WalletField>
         </div>
         <div class="col-sm-4 col-md-3">
           <template v-if="wallet.refresh_type == 'date'">
@@ -138,7 +138,7 @@
         </div>
       </div>
 
-      <JudecoinField class="q-mt-md" :label="$t('fieldLabels.password')">
+      <WalletField class="q-mt-md" :label="$t('fieldLabels.password')">
         <q-input
           v-model="wallet.password"
           :placeholder="$t('placeholders.walletPassword')"
@@ -148,9 +148,9 @@
           dense
           @keyup.enter="restore"
         />
-      </JudecoinField>
+      </WalletField>
 
-      <JudecoinField class="q-mt-md" :label="$t('fieldLabels.confirmPassword')">
+      <WalletField class="q-mt-md" :label="$t('fieldLabels.confirmPassword')">
         <q-input
           v-model="wallet.password_confirm"
           type="password"
@@ -159,7 +159,7 @@
           dense
           @keyup.enter="restore"
         />
-      </JudecoinField>
+      </WalletField>
       <q-btn
         class="submit-button"
         color="primary"
@@ -174,7 +174,7 @@
 import { required, numeric } from "vuelidate/lib/validators";
 import { privkey, address } from "src/validators/common";
 import { mapState } from "vuex";
-import JudecoinField from "components/judecoin_field";
+import WalletField from "components/wallet_field";
 import { date } from "quasar";
 import _ from "lodash";
 
@@ -184,7 +184,7 @@ let dateFirstBlock = date.formatDate(timeStampFirstBlock, qDateFormat);
 
 export default {
   components: {
-    JudecoinField
+    WalletField
   },
   data() {
     return {

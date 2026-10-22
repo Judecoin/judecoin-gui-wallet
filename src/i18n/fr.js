@@ -159,6 +159,8 @@ export default {
       title: "Déverrouiller le nœud de service",
       confirmTitle: "Confirmer le déverrouillage",
       message: "Voulez-vous déverrouiller le nœud de service ?",
+      confirmMessage:
+        "Vous demandez le déverrouillage de cette mise dans un nœud partagé. Cela programmera la désactivation du nœud de service. Vous continuerez à recevoir des récompenses jusqu’à l’expiration du nœud. Voulez-vous continuer ?",
       ok: "DÉVERROUILLER"
     },
     unlockServiceNodeWarning: {
@@ -280,6 +282,7 @@ export default {
       sendSuccess: "Transaction envoyée avec succès",
       signatureCopied: "Signature copied to clipboard",
       stakeSuccess: "Mise placée avec succès",
+      unlockServiceNodeSuccess: "Nœud de service déverrouillé avec succès",
       transactionNotesSaved: "Notes de transaction enregistrées"
     },
     errors: {
@@ -414,9 +417,9 @@ export default {
     destinationUnknown: "Destination inconnue",
     editAddressBookEntry: "Modifiez l'entrée du carnet d'adresses",
     loadingSettings: "Chargement des réglages",
-    judecoinBalance: "Solde",
-    judecoinUnlockedBalance: "Solde débloqué",
-    judecoinUnlockedShort: "Débloqué",
+    judeBalance: "Solde",
+    judeUnlockedBalance: "Solde débloqué",
+    judeUnlockedShort: "Débloqué",
     noTransactionsFound: "Aucune transaction trouvée",
     notes: "Notes",
     numberOfUnspentOutputs: "Nombre de sorties non dépensées",
@@ -453,6 +456,7 @@ export default {
     transactionConfirmed: "confirmée",
     transactions: {
       amount: "Montant",
+      confirmations: "Confirmations",
       description: "Transaction {type}",
       fee: "Frais",
       paidBySender: "Payé par l'expéditeur",
@@ -467,8 +471,8 @@ export default {
         pending: "En attente",
         pendingIncoming: "Entrantes en attente",
         pendingOutgoing: "Sortantes en attente",
-        miner: "Miner",
-        serviceNode: "Noeud de service",
+        miner: "Récompense de bloc",
+        serviceNode: "Récompense de bloc",
         governance: "Gouvernance",
         stake: "Stake",
         failed: "Echouées"
