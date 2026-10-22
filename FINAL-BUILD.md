@@ -19,6 +19,3 @@ pnpm install --prod --ignore-scripts --ignore-workspace
 cd ../../..
 pnpm exec electron-builder --config electron-builder-final.yml --win --x64 --publish never
 ```
-
-The Windows installer is unsigned. Code signing must be performed separately
-with a trusted publisher certificate.
