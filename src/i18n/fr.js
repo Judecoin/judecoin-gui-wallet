@@ -159,8 +159,10 @@ export default {
       title: "Déverrouiller le nœud de service",
       confirmTitle: "Confirmer le déverrouillage",
       message: "Voulez-vous déverrouiller le nœud de service ?",
-      confirmMessage:
-        "Vous demandez le déverrouillage de cette mise dans un nœud partagé. Cela programmera la désactivation du nœud de service. Vous continuerez à recevoir des récompenses jusqu’à l’expiration du nœud. Voulez-vous continuer ?",
+      confirmSharedMessage:
+        "Vous demandez le déverrouillage de cette mise dans un nœud partagé, prévu à la hauteur de bloc {height}, dans environ {days} jours. Tous les participants continueront à recevoir des récompenses jusqu’à l’expiration du nœud partagé. Voulez-vous déverrouiller cette mise ?",
+      confirmServiceMessage:
+        "Vous demandez le déverrouillage de cette mise dans un nœud de service, prévu à la hauteur de bloc {height}, dans environ {days} jours. Vous continuerez à recevoir des récompenses jusqu’à l’expiration du nœud de service. Voulez-vous déverrouiller cette mise ?",
       ok: "DÉVERROUILLER"
     },
     unlockServiceNodeWarning: {
@@ -283,6 +285,8 @@ export default {
       signatureCopied: "Signature copied to clipboard",
       stakeSuccess: "Mise placée avec succès",
       unlockServiceNodeSuccess: "Nœud de service déverrouillé avec succès",
+      unlockServiceNodeSubmitted:
+        "Demande de déverrouillage envoyée ; en attente de confirmation du réseau",
       transactionNotesSaved: "Notes de transaction enregistrées"
     },
     errors: {
@@ -475,6 +479,7 @@ export default {
         serviceNode: "Récompense de bloc",
         governance: "Gouvernance",
         stake: "Stake",
+        unlock: "Déverrouillage du nœud de service",
         failed: "Echouées"
       }
     },

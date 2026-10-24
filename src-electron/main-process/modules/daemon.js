@@ -12,9 +12,12 @@ const portscanner = require("portscanner");
 const {
   LOCAL_DAEMON_START_TIMEOUT,
   rpcErrorCause,
+  rpcRequestSafety,
   rpcTimeout,
-  startupTimedOut
+  startupTimedOut,
+  validateRpcResponse
 } = require("./rpc-safety");
+const { isDaemonTransactionsResponse } = require("./unlock-history");
 
 export class Daemon {
   constructor(backend) {
@@ -631,6 +634,7 @@ export class Daemon {
         method: method
       },
       httpAgent: this.agent,
+      ...rpcRequestSafety(),
       timeout: rpcTimeout(options.timeout)
     };
     if (Object.keys(params).length !== 0) {
@@ -640,17 +644,18 @@ export class Daemon {
     return this.queue.add(() => {
       return axios(requestOptions)
         .then(({ data: response }) => {
-          if (response.hasOwnProperty("error")) {
+          const validatedResponse = validateRpcResponse(response, id);
+          if (validatedResponse.hasOwnProperty("error")) {
             return {
               method: method,
               params: params,
-              error: response.error
+              error: validatedResponse.error
             };
           }
           return {
             method: method,
             params: params,
-            result: response.result
+            result: validatedResponse.result
           };
         })
         .catch(error => {
@@ -665,6 +670,55 @@ export class Daemon {
           };
         });
     });
+  }
+
+  getTransactions(txids) {
+    const hashes = (txids || []).filter(
+      hash => typeof hash === "string" && /^[0-9a-f]{64}$/i.test(hash)
+    );
+    if (hashes.length === 0) {
+      return Promise.resolve({
+        method: "get_transactions",
+        result: { status: "OK", txs: [], missed_tx: [] }
+      });
+    }
+
+    const params = {
+      txs_hashes: hashes,
+      decode_as_json: true,
+      tx_extra: true
+    };
+    const requestOptions = {
+      url: `${this.protocol}${this.hostname}:${this.port}/get_transactions`,
+      method: "POST",
+      data: params,
+      httpAgent: this.agent,
+      ...rpcRequestSafety(),
+      timeout: rpcTimeout()
+    };
+
+    return this.queue.add(() =>
+      axios(requestOptions)
+        .then(({ data: response }) => {
+          if (!isDaemonTransactionsResponse(response)) {
+            throw new Error("Invalid get_transactions response");
+          }
+          return {
+            method: "get_transactions",
+            params,
+            result: response
+          };
+        })
+        .catch(error => ({
+          method: "get_transactions",
+          params,
+          error: {
+            code: -1,
+            message: "Cannot read transactions from daemon-rpc",
+            cause: rpcErrorCause(error)
+          }
+        }))
+    );
   }
 
   /**

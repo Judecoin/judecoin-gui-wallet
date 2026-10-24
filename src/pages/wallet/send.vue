@@ -212,6 +212,9 @@ import WalletPassword from "src/mixins/wallet_password";
 import ConfirmDialogMixin from "src/mixins/confirm_dialog_mixin";
 import ConfirmTransactionDialog from "components/confirm_tx_dialog";
 const objectAssignDeep = require("object-assign-deep");
+const {
+  shouldPauseBackgroundUpdates
+} = require("src/utils/gateway-update-gate");
 
 // the case for doing nothing on a tx_status update
 const DO_NOTHING = 10;
@@ -497,6 +500,9 @@ export default {
             password
           });
 
+          if (shouldPauseBackgroundUpdates(this.$q.platform.is.win)) {
+            this.$gateway.pauseBackgroundUpdates();
+          }
           this.$gateway.send("wallet", "transfer", newTx);
         })
         .onDismiss(() => {})

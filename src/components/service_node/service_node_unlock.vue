@@ -54,11 +54,16 @@ export default {
       { action: "viewOnExplorer", i18n: "menuItems.viewOnExplorer" }
     ];
     return {
-      menuItems
+      menuItems,
+      key: null,
+      password: null,
+      unlockIsShared: false,
+      stakeKeyImages: []
     };
   },
   computed: mapState({
     theme: state => state.gateway.app.config.appearance.theme,
+    daemon_height: state => state.gateway.daemon.info.height,
     unlock_status: state => state.gateway.service_node_status.unlock,
     our_address: state => {
       const primary = state.gateway.wallet.address_list.primary[0];
@@ -104,6 +109,8 @@ export default {
           case 0:
             this.key = null;
             this.password = null;
+            this.unlockIsShared = false;
+            this.stakeKeyImages = [];
 
             this.$q.notify({
               type: "positive",
@@ -112,12 +119,47 @@ export default {
             });
             this.$v.$reset();
             break;
-          case 1:
+          case 3:
+            this.key = null;
+            this.password = null;
+            this.unlockIsShared = false;
+            this.stakeKeyImages = [];
+
+            this.$q.notify({
+              type: "info",
+              timeout: 3000,
+              message
+            });
+            this.$v.$reset();
+            break;
+          case 1: {
             // Tell the user to confirm
+            const unlockHeight = Number(val.unlockHeight);
+            const daemonHeight = Number(this.daemon_height);
+            if (
+              !Number.isSafeInteger(unlockHeight) ||
+              !Number.isSafeInteger(daemonHeight)
+            ) {
+              this.$q.notify({
+                type: "negative",
+                timeout: 3000,
+                message: this.$t("notification.errors.failedServiceNodeUnlock")
+              });
+              return;
+            }
+            const days = Math.ceil(
+              (Math.max(0, unlockHeight - daemonHeight) * 180) / 86400
+            );
+            const confirmationKey = this.unlockIsShared
+              ? "dialog.unlockServiceNode.confirmSharedMessage"
+              : "dialog.unlockServiceNode.confirmServiceMessage";
             this.$q
               .dialog({
                 title: this.$t("dialog.unlockServiceNode.confirmTitle"),
-                message: this.$t("dialog.unlockServiceNode.confirmMessage"),
+                message: this.$t(confirmationKey, {
+                  height: unlockHeight,
+                  days
+                }),
                 ok: {
                   label: this.$t("dialog.unlockServiceNode.ok"),
                   color: "primary"
@@ -138,9 +180,12 @@ export default {
               .onDismiss(() => null)
               .onCancel(() => null);
             break;
+          }
           case -1:
             this.key = null;
             this.password = null;
+            this.unlockIsShared = false;
+            this.stakeKeyImages = [];
 
             this.$q.notify({
               type: "negative",
@@ -162,7 +207,6 @@ export default {
       this.$refs.serviceNodeDetailsUnlock.node = node;
     },
     unlockWarning(node, event) {
-      const key = node.service_node_pubkey;
       // stop detail page from popping up
       this.$gateway.send("wallet", "update_service_node_list");
       event.stopPropagation();
@@ -183,14 +227,25 @@ export default {
           color: this.theme == "dark" ? "white" : "dark"
         })
         .onOk(() => {
-          this.unlock(key);
+          this.unlock(node);
         })
         .onDismiss(() => {})
         .onCancel(() => {});
     },
-    async unlock(key) {
+    async unlock(node) {
       // We store this as it could change between the 2 step process
-      this.key = key;
+      this.key = node.service_node_pubkey;
+      const contributors = (node.contributors || []).filter(
+        contributor => contributor.amount > 0
+      );
+      this.unlockIsShared = contributors.length > 1;
+      const ourContribution = contributors.find(
+        contributor => contributor.address === this.our_address
+      );
+      this.stakeKeyImages = (ourContribution
+        ? ourContribution.locked_contributions || []
+        : []
+      ).map(contribution => contribution.key_image);
 
       let passwordDialog = await this.showPasswordConfirmation({
         title: this.$t("dialog.unlockServiceNode.title"),
@@ -223,7 +278,8 @@ export default {
       this.$gateway.send("wallet", "unlock_stake", {
         password,
         service_node_key: key,
-        confirmed
+        confirmed,
+        stake_key_images: this.stakeKeyImages
       });
     },
     copyKey(key) {

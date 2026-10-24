@@ -1,4 +1,4 @@
-# Jude Wallet 4.0.0 final Windows build
+# Jude Wallet 4.0.1 final Windows build
 
 The source archive intentionally excludes `node_modules`, `.quasar`, `dist`,
 package-manager caches, logs, and generated installers.

@@ -194,6 +194,8 @@ export class Backend {
   }
 
   send(event, data = {}) {
+    if (!this.wss) return;
+
     let message = {
       event,
       data

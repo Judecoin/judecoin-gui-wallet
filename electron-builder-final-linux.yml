@@ -1,9 +1,9 @@
 appId: com.jude.desktop-wallet
 productName: jude-wallet-gui
 copyright: Copyright © 2024-2026 Judecoin Community
-electronVersion: 41.10.3
+electronVersion: 43.8.3
 npmRebuild: false
-artifactName: Jude-Wallet-gui-4.0.0-Linux-x64.${ext}
+artifactName: Jude-Wallet-gui-4.0.1-Linux-x64.${ext}
 directories:
   app: dist/electron/UnPackaged
   output: dist/electron/Packaged
@@ -29,10 +29,10 @@ deb:
   packageName: jude-wallet-gui
   synopsis: Desktop GUI wallet for Judecoin cryptocurrency
   fpm:
-    - packaging/linux/jude-wallet-gui.metainfo.xml=/usr/share/metainfo/jude-wallet-gui.metainfo.xml
     - --replaces=jude-desktop-wallet
     - --conflicts=jude-desktop-wallet
     - --provides=jude-desktop-wallet
+    - packaging/linux/jude-wallet-gui.metainfo.xml=/usr/share/metainfo/jude-wallet-gui.metainfo.xml
   depends:
     - libgtk-3-0
     - libnotify4

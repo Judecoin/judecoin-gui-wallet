@@ -16,7 +16,9 @@ const { normalizeUserFacingPayload } = require("./user-facing-brand");
 const {
   WALLET_RPC_START_TIMEOUT,
   rpcErrorCause,
-  startupTimedOut
+  rpcRequestSafety,
+  startupTimedOut,
+  validateRpcResponse
 } = require("./rpc-safety");
 const {
   reconcileDeregisteredStakes
@@ -25,6 +27,11 @@ const {
   canUnlockStatus,
   unlockResultStatus
 } = require("./service-node-unlock-status");
+const { relayLocalUnlock } = require("./unlock-relay");
+const {
+  candidateUnlockHashes,
+  reconcileUnlockHistory
+} = require("./unlock-history");
 const {
   normalizeTransactionType
 } = require("../../../src/utils/transaction-type");
@@ -404,7 +411,8 @@ export class WalletRPC {
         this.unlockStake(
           params.password,
           params.service_node_key,
-          params.confirmed || false
+          params.confirmed || false,
+          params.stake_key_images || []
         );
         break;
 
@@ -1777,7 +1785,12 @@ export class WalletRPC {
     return result.deregisteredStakes;
   }
 
-  unlockStake(password, service_node_key, confirmed = false) {
+  unlockStake(
+    password,
+    service_node_key,
+    confirmed = false,
+    stake_key_images = []
+  ) {
     const sendError = (message, i18n = true) => {
       const key = i18n ? "i18n" : "message";
       this.sendGateway("set_snode_status", {
@@ -1826,18 +1839,38 @@ export class WalletRPC {
         };
 
         if (confirmed) {
-          sendRPC("request_stake_unlock").then(data => {
-            if (!data) return;
+          const readUnlockHashes = async () => {
+            const history = await this.sendRPC("get_transfers", {
+              pending: true,
+              failed: true
+            });
+            if (!history || !history.result) return [];
+            return candidateUnlockHashes(
+              (history.result.pending || []).concat(history.result.failed || [])
+            );
+          };
 
-            const unlock = unlockResultStatus(data);
+          relayLocalUnlock({
+            daemon: this.backend.daemon,
+            expectedKeyImages: stake_key_images,
+            requestUnlock: () => sendRPC("request_stake_unlock"),
+            readUnlockHashes
+          })
+            .then(data => {
+              if (!data) return;
 
-            // Update the new snode list
-            if (data.unlocked) {
-              this.backend.daemon.updateServiceNodes();
-            }
+              const unlock = unlockResultStatus(data);
 
-            this.sendGateway("set_snode_status", { unlock });
-          });
+              // Update the new snode list
+              if (data.unlocked && !data.submitted) {
+                this.backend.daemon.updateServiceNodes();
+              }
+
+              this.sendGateway("set_snode_status", { unlock });
+            })
+            .catch(() => {
+              sendError("notification.errors.failedServiceNodeUnlock");
+            });
         } else {
           sendRPC("can_request_stake_unlock").then(data => {
             if (!data) return;
@@ -2444,63 +2477,70 @@ export class WalletRPC {
     });
   }
 
-  getTransactions() {
-    return new Promise(resolve => {
-      this.sendRPC("get_transfers", {
-        in: true,
-        out: true,
-        pending: true,
-        failed: true,
-        pool: true
-      }).then(data => {
-        if (data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
-          resolve({});
-          return;
-        }
-        let wallet = {
-          transactions: {
-            tx_list: []
-          }
-        };
-
-        const types = [
-          "in",
-          "out",
-          "pending",
-          "failed",
-          "pool",
-          "miner",
-          "snode",
-          "gov",
-          "stake"
-        ];
-        types.forEach(type => {
-          if (data.result.hasOwnProperty(type)) {
-            wallet.transactions.tx_list = wallet.transactions.tx_list.concat(
-              data.result[type]
-            );
-          }
-        });
-
-        wallet.transactions.tx_list.forEach(tx => {
-          tx.type = normalizeTransactionType(tx.type);
-          if (
-            (tx.type === "out" || tx.type === "pending") &&
-            (!tx.destinations || tx.destinations.length === 0) &&
-            Object.prototype.hasOwnProperty.call(this.txDestinations, tx.txid)
-          ) {
-            tx.destinations = this.txDestinations[tx.txid];
-          }
-        });
-
-        wallet.transactions.tx_list.sort(function(a, b) {
-          if (a.timestamp < b.timestamp) return 1;
-          if (a.timestamp > b.timestamp) return -1;
-          return 0;
-        });
-        resolve(wallet);
-      });
+  async getTransactions() {
+    const data = await this.sendRPC("get_transfers", {
+      in: true,
+      out: true,
+      pending: true,
+      failed: true,
+      pool: true
     });
+    if (data.hasOwnProperty("error") || !data.hasOwnProperty("result")) {
+      return {};
+    }
+    let wallet = {
+      transactions: {
+        tx_list: []
+      }
+    };
+
+    const types = [
+      "in",
+      "out",
+      "pending",
+      "failed",
+      "pool",
+      "miner",
+      "snode",
+      "gov",
+      "stake"
+    ];
+    types.forEach(type => {
+      if (data.result.hasOwnProperty(type)) {
+        wallet.transactions.tx_list = wallet.transactions.tx_list.concat(
+          data.result[type]
+        );
+      }
+    });
+
+    wallet.transactions.tx_list.forEach(tx => {
+      tx.type = normalizeTransactionType(tx.type);
+      if (
+        (tx.type === "out" || tx.type === "pending") &&
+        (!tx.destinations || tx.destinations.length === 0) &&
+        Object.prototype.hasOwnProperty.call(this.txDestinations, tx.txid)
+      ) {
+        tx.destinations = this.txDestinations[tx.txid];
+      }
+    });
+
+    const unlockHashes = candidateUnlockHashes(wallet.transactions.tx_list);
+    if (unlockHashes.length > 0) {
+      const chainData = await this.backend.daemon.getTransactions(unlockHashes);
+      if (chainData && chainData.result) {
+        wallet.transactions.tx_list = reconcileUnlockHistory(
+          wallet.transactions.tx_list,
+          chainData.result
+        );
+      }
+    }
+
+    wallet.transactions.tx_list.sort(function(a, b) {
+      if (a.timestamp < b.timestamp) return 1;
+      if (a.timestamp > b.timestamp) return -1;
+      return 0;
+    });
+    return wallet;
   }
 
   getAddressBook() {
@@ -3239,7 +3279,8 @@ export class WalletRPC {
         username: this.auth[0],
         password: this.auth[1]
       },
-      httpAgent: this.agent
+      httpAgent: this.agent,
+      ...rpcRequestSafety()
     };
     if (Object.keys(params).length !== 0) {
       options.data.params = params;
@@ -3251,17 +3292,18 @@ export class WalletRPC {
     return this.queue.add(() => {
       return axios(options)
         .then(({ data: response }) => {
-          if (response.hasOwnProperty("error")) {
+          const validatedResponse = validateRpcResponse(response, id);
+          if (validatedResponse.hasOwnProperty("error")) {
             return {
               method: method,
               params: params,
-              error: response.error
+              error: validatedResponse.error
             };
           }
           return {
             method: method,
             params: params,
-            result: response.result
+            result: validatedResponse.result
           };
         })
         .catch(error => {

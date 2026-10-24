@@ -217,8 +217,10 @@ export default {
       title: "サービスノードのロック解除",
       confirmTitle: "ロック解除の確認",
       message: "サービスノードをロック解除しますか？",
-      confirmMessage:
-        "共有ノードのこのステークをロック解除しようとしています。サービスノードは無効化の予定に入り、期限切れになるまで報酬を受け取り続けます。続行しますか？",
+      confirmSharedMessage:
+        "共有ノードのこのステークをロック解除しようとしており、ブロック高 {height}、約 {days} 日後に解除される予定です。共有ノードの期限が切れるまで、すべての参加者は引き続き報酬を受け取ります。ロック解除しますか？",
+      confirmServiceMessage:
+        "サービスノードのこのステークをロック解除しようとしており、ブロック高 {height}、約 {days} 日後に解除される予定です。サービスノードの期限が切れるまで、引き続き報酬を受け取ります。ロック解除しますか？",
       ok: "ロック解除"
     },
     unlockServiceNodeWarning: {
@@ -375,6 +377,8 @@ export default {
       signatureVerified: "署名が検証されました",
       stakeSuccess: "ステーキングに成功しました",
       unlockServiceNodeSuccess: "サービスノードのロック解除に成功しました",
+      unlockServiceNodeSubmitted:
+        "ロック解除リクエストを送信しました。ネットワークの確認を待っています",
       transactionNotesSaved: "トランザクションメモが保存されました",
       walletCopied: "ウォレットアドレスをクリップボードにコピーしました"
     },
@@ -657,6 +661,7 @@ export default {
         serviceNode: "ブロック報酬",
         governance: "ガバナンス",
         stake: "ステーキング",
+        unlock: "サービスノードのロック解除",
         failed: "失敗"
       }
     },

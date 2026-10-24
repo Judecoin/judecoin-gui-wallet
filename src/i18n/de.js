@@ -178,8 +178,10 @@ export default {
       title: "Unlock Service Node",
       confirmTitle: "Unlock bestätigen",
       message: "Möchtest du den Service Node „unlocken“?",
-      confirmMessage:
-        "Sie beantragen die Entsperrung dieses Einsatzes in einem gemeinsam genutzten Service Node. Dadurch wird die Deaktivierung des Service Nodes geplant. Bis zum Ablauf des Service Nodes erhalten Sie weiterhin Belohnungen. Möchten Sie fortfahren?",
+      confirmSharedMessage:
+        "Sie beantragen die Entsperrung dieses Einsatzes in einem gemeinsam genutzten Node, die voraussichtlich bei Blockhöhe {height} in etwa {days} Tagen erfolgen wird. Alle Teilnehmer erhalten bis zum Ablauf des gemeinsam genutzten Nodes weiterhin Belohnungen. Möchten Sie diesen Einsatz entsperren?",
+      confirmServiceMessage:
+        "Sie beantragen die Entsperrung dieses Service-Node-Einsatzes, die voraussichtlich bei Blockhöhe {height} in etwa {days} Tagen erfolgen wird. Bis zum Ablauf des Service Nodes erhalten Sie weiterhin Belohnungen. Möchten Sie diesen Einsatz entsperren?",
       ok: "UNLOCK"
     },
     unlockServiceNodeWarning: {
@@ -304,6 +306,8 @@ export default {
       signatureCopied: "Signature copied to clipboard",
       stakeSuccess: "Staking erfolgreich",
       unlockServiceNodeSuccess: "Service Node erfolgreich entsperrt",
+      unlockServiceNodeSubmitted:
+        "Entsperranfrage gesendet; Netzwerkbestätigung wird erwartet",
       transactionNotesSaved: "Notizen zur Transaktion gesichert"
     },
     errors: {
@@ -504,6 +508,7 @@ export default {
         serviceNode: "Blockbelohnung",
         governance: "Governance",
         stake: "Stake",
+        unlock: "Service-Node-Entsperrung",
         failed: "Fehlgeschlagen"
       }
     },

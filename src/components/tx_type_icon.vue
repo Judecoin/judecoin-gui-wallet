@@ -5,7 +5,7 @@
       style="width:40px;height:40px;"
     />
   </div>
-  <div v-else-if="type == 'out'" class="tx-icon">
+  <div v-else-if="type == 'out' || type == 'unlock'" class="tx-icon">
     <img
       src="jude-assets/transaction-status/20-tx-sent.png"
       style="width:40px;height:40px;"

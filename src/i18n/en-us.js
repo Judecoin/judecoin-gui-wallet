@@ -217,8 +217,10 @@ export default {
       title: "Unlock service node",
       confirmTitle: "Confirm unlock",
       message: "Do you want to unlock the service node?",
-      confirmMessage:
-        "You are requesting to unlock this shared-node stake. This will schedule the service node for deactivation. You will continue receiving rewards until the service node expires. Do you want to continue?",
+      confirmSharedMessage:
+        "You are requesting to unlock this shared-node stake, which is expected to unlock at block height {height}, in approximately {days} days. All participants will continue receiving rewards until the shared node expires. Do you want to unlock?",
+      confirmServiceMessage:
+        "You are requesting to unlock this service-node stake, which is expected to unlock at block height {height}, in approximately {days} days. You will continue receiving rewards until the service node expires. Do you want to unlock?",
       ok: "UNLOCK"
     },
     unlockServiceNodeWarning: {
@@ -375,6 +377,8 @@ export default {
       signatureVerified: "Signature verified",
       stakeSuccess: "Successfully staked",
       unlockServiceNodeSuccess: "Successfully unlocked service node",
+      unlockServiceNodeSubmitted:
+        "Unlock request submitted; waiting for network confirmation",
       transactionNotesSaved: "Transaction notes saved",
       walletCopied: "Wallet address copied to clipboard"
     },
@@ -657,6 +661,7 @@ export default {
         serviceNode: "Block reward",
         governance: "Governance",
         stake: "Stake",
+        unlock: "Service node unlock",
         failed: "Failed"
       }
     },

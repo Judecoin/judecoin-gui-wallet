@@ -218,8 +218,10 @@ export default {
       title: "Sblocca nodo di servizio",
       confirmTitle: "Conferma sblocco",
       message: "Vuoi sbloccare il nodo di servizio?",
-      confirmMessage:
-        "Stai richiedendo lo sblocco di questa quota in un nodo condiviso. Il nodo di servizio verrà programmato per la disattivazione. Continuerai a ricevere ricompense fino alla scadenza del nodo. Vuoi continuare?",
+      confirmSharedMessage:
+        "Stai richiedendo lo sblocco di questa quota in un nodo condiviso, previsto all'altezza del blocco {height}, tra circa {days} giorni. Tutti i partecipanti continueranno a ricevere ricompense fino alla scadenza del nodo condiviso. Vuoi sbloccarla?",
+      confirmServiceMessage:
+        "Stai richiedendo lo sblocco di questa quota in un nodo di servizio, previsto all'altezza del blocco {height}, tra circa {days} giorni. Continuerai a ricevere ricompense fino alla scadenza del nodo di servizio. Vuoi sbloccarla?",
       ok: "SBLOCCA"
     },
     unlockServiceNodeWarning: {
@@ -377,6 +379,8 @@ export default {
       signatureVerified: "Firma verificata",
       stakeSuccess: "Staking effettuato con successo",
       unlockServiceNodeSuccess: "Nodo di servizio sbloccato correttamente",
+      unlockServiceNodeSubmitted:
+        "Richiesta di sblocco inviata; in attesa della conferma della rete",
       transactionNotesSaved: "Note transazione salvate",
       walletCopied: "Indirizzo portafoglio copiato negli appunti"
     },
@@ -662,6 +666,7 @@ export default {
         serviceNode: "Ricompensa del blocco",
         governance: "Governance",
         stake: "Stake",
+        unlock: "Sblocco del nodo di servizio",
         failed: "Non riuscita"
       }
     },

@@ -212,8 +212,10 @@ export default {
       title: "解锁服务节点",
       confirmTitle: "确认解锁",
       message: "是否要解锁此服务节点？",
-      confirmMessage:
-        "您正在申请解锁这笔共享节点质押。这将安排服务节点停止运行；在服务节点到期前，您仍会继续获得奖励。是否继续？",
+      confirmSharedMessage:
+        "您正在申请解锁这笔共享节点质押，预计将在区块高度 {height} 解锁，约需 {days} 天。在共享节点到期前，所有参与者仍会继续获得奖励。是否解锁？",
+      confirmServiceMessage:
+        "您正在申请解锁这笔服务节点质押，预计将在区块高度 {height} 解锁，约需 {days} 天。在服务节点到期前，您仍会继续获得奖励。是否解锁？",
       ok: "解锁"
     },
     unlockServiceNodeWarning: {
@@ -370,6 +372,7 @@ export default {
       signatureVerified: "签名验证通过",
       stakeSuccess: "质押成功",
       unlockServiceNodeSuccess: "服务节点解锁成功",
+      unlockServiceNodeSubmitted: "解锁请求已提交，等待网络确认",
       transactionNotesSaved: "交易备注已保存",
       walletCopied: "钱包地址已复制到剪贴板"
     },
@@ -642,6 +645,7 @@ export default {
         serviceNode: "区块奖励",
         governance: "治理",
         stake: "质押",
+        unlock: "服务节点解锁",
         failed: "失败"
       }
     },

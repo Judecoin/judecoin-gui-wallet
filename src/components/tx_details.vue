@@ -63,6 +63,13 @@
                 })
               }}
             </div>
+            <div v-else-if="tx.type == 'unlock'" :class="'tx-' + tx.type">
+              {{
+                $t("strings.transactions.description", {
+                  type: $t("strings.transactions.types.unlock")
+                })
+              }}
+            </div>
           </div>
 
           <div class="row justify-between" style="max-width: 768px">

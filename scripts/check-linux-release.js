@@ -69,6 +69,7 @@ assert.strictEqual(
   packageJson.description,
   "Desktop GUI wallet for Judecoin cryptocurrency"
 );
+assert.strictEqual(packageJson.homepage, "https://github.com/Judecoin");
 assert.ok(
   linuxBuilderConfig.includes("deb:\n  packageName: jude-wallet-gui\n")
 );
@@ -92,6 +93,7 @@ for (const text of [
   "<id>jude-wallet-gui.desktop</id>",
   "<name>Judecoin Wallet</name>",
   "<summary>Desktop GUI wallet for Judecoin cryptocurrency</summary>",
+  '<url type="homepage">https://github.com/Judecoin</url>',
   '<icon type="stock">jude-wallet-gui</icon>',
   '<launchable type="desktop-id">jude-wallet-gui.desktop</launchable>'
 ]) {
@@ -110,6 +112,13 @@ for (const relation of [
 ]) {
   assert.ok(config.electron.builder.deb.fpm.includes(relation));
   assert.ok(linuxBuilderConfig.includes(`    - ${relation}`));
+  assert.ok(
+    linuxBuilderConfig.indexOf(`    - ${relation}`) <
+      linuxBuilderConfig.indexOf(
+        "    - packaging/linux/jude-wallet-gui.metainfo.xml="
+      ),
+    `${relation} must precede fpm file mappings`
+  );
 }
 assert.deepStrictEqual(config.electron.builder.win.extraResources, [
   { from: "bin/win32", to: "bin" },

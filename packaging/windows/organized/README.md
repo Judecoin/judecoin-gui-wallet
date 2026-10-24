@@ -33,5 +33,5 @@ packaging\windows\organized\build-organized-installer.cmd
 The resulting installer is written to:
 
 ```text
-dist\electron\Packaged\Jude-Wallet-gui-4.0.0-Windows-x64.exe
+dist\electron\Packaged\Jude-Wallet-gui-4.0.1-Windows-x64.exe
 ```

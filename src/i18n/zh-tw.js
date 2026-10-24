@@ -82,84 +82,84 @@ export default {
     banPeer: {
       title: "封鎖節點",
       peerDetailsTitle: "節點詳情",
-      message: "輸入封鎖節點的時長（秒）。\n預設 3600 = 1 小時。",
+      message: "輸入封鎖節點的時長（秒）.\n預設 3600 = 1 小時.",
       ok: "封鎖節點"
     },
     copyAddress: {
       title: "複製地址",
-      message: "此地址關聯了一個付款 ID。\n請確保單獨複製付款 ID。"
+      message: "此地址關聯了一個付款 ID.\n請確保單獨複製付款 ID."
     },
     copyPrivateKeys: {
       // Copy {seedWords/viewKey/spendKey}
       title: "複製 {type}",
-      message: "請小心分享您的私鑰，持有私鑰即可控制您的資金。",
+      message: "請小心分享您的私鑰,持有私鑰即可控制您的資金.",
       seedWords: "助記詞",
       viewKey: "查看密鑰",
       spendKey: "支出密鑰"
     },
     deleteWallet: {
       title: "刪除錢包",
-      message: "您確定要刪除錢包嗎？\n請確認已備份您的私鑰。\n此操作無法撤銷！",
+      message: "您確定要刪除錢包嗎?\n請確認已備份您的私鑰.\n此操作無法撤銷!",
       ok: "刪除"
     },
     exit: {
       title: "離開",
-      message: "確定要離開嗎？",
+      message: "確定要離開嗎?",
       ok: "離開"
     },
     exportTransfers: {
       title: "匯出交易記錄為 CSV",
-      message: "是否要匯出交易記錄？",
+      message: "是否要匯出交易記錄?",
       export: "匯出"
     },
     keyImages: {
       title: "{type}金鑰影像",
-      message: "是否要{type}金鑰影像？",
+      message: "是否要{type}金鑰影像?",
       export: "匯出",
       import: "匯入"
     },
     onsUpdate: {
       title: "更新 ONS 記錄",
-      message: "是否要更新 ONS 記錄？",
+      message: "是否要更新 ONS 記錄?",
       ok: "更新"
     },
     noPassword: {
       title: "未設定密碼",
-      message: "確定要創建不設密碼的錢包嗎？",
+      message: "確定要創建不設密碼的錢包嗎?",
       ok: "是"
     },
     password: {
       title: "密碼",
-      message: "輸入錢包密碼以繼續。"
+      message: "輸入錢包密碼以繼續."
     },
     purchase: {
       title: "購買名稱",
-      message: "是否要購買此名稱？",
+      message: "是否要購買此名稱?",
       ok: "購買"
     },
     renew: {
       title: "續期名稱",
-      message: "是否要續期此名稱？",
+      message: "是否要續期此名稱?",
       ok: "續期"
     },
     registerServiceNode: {
       title: "註冊服務節點",
-      message: "是否要註冊此服務節點？",
+      message: "是否要註冊此服務節點?",
       ok: "註冊"
     },
     rescan: {
       title: "重新掃描錢包",
-      message: "警告：部分先前交易的資訊\n（如收款方地址）將會遺失。",
+      message: "警告:部分先前交易的資訊\n（如收款方地址）將會遺失.",
       ok: "重新掃描"
     },
     restart: {
       title: "重新啟動",
-      message: "變更需要重新啟動才能生效。是否立即重新啟動？",
+      message: "變更需要重新啟動才能生效.是否立即重新啟動?",
       ok: "重新啟動"
     },
     showPrivateKeys: {
       title: "顯示種子和密鑰",
-      message: "是否要查看您的私鑰？",
+      message: "是否要查看您的私鑰?",
       ok: "顯示"
     },
     signature: {
@@ -168,27 +168,27 @@ export default {
     },
     stake: {
       title: "質押",
-      message: "是否要進行質押？",
+      message: "是否要進行質押?",
       ok: "質押"
     },
     sweepAll: {
       title: "全部歸集",
-      message: "是否要全部歸集？",
+      message: "是否要全部歸集?",
       ok: "全部歸集"
     },
     sweepAllWarning: {
       title: "全部歸集警告",
       message:
-        "您即將透過向自己發送一筆交易來合併所有未花費的資金，您的錢包餘額可能會暫時顯示為 0，經過 10 個區塊後您的資金將解鎖，届時可正常進行質押。",
+        "您即將透過向自己發送一筆交易來合併所有未花費的資金,您的錢包餘額可能會暫時顯示為 0,經過 10 個區塊後您的資金將解鎖,届時可正常進行質押.",
       ok: "繼續"
     },
     switchWallet: {
       title: "切換錢包",
-      closeMessage: "確定要關閉目前的錢包嗎？",
+      closeMessage: "確定要關閉目前的錢包嗎?",
       restartMessage:
-        "錢包 RPC 正在同步中。\n如果要切換錢包，您必須重新啟動應用程式。\n同步進度將會遺失，需要重新掃描區塊鏈。",
+        "錢包 RPC 正在同步中.\n如果要切換錢包,您必須重新啟動應用程式.\n同步進度將會遺失,需要重新掃描區塊鏈.",
       restartWalletMessage:
-        "如果要切換錢包，您必須重新啟動應用程式。確定要關閉目前的錢包並重新啟動嗎？"
+        "如果要切換錢包,您必須重新啟動應用程式.確定要關閉目前的錢包並重新啟動嗎?"
     },
     transactionDetails: {
       title: "交易詳情",
@@ -196,7 +196,7 @@ export default {
     },
     transfer: {
       title: "轉帳",
-      message: "是否要發送此交易？",
+      message: "是否要發送此交易?",
       ok: "發送"
     },
     confirmTransaction: {
@@ -211,15 +211,17 @@ export default {
     unlockServiceNode: {
       title: "解鎖服務節點",
       confirmTitle: "確認解鎖",
-      message: "是否要解鎖此服務節點？",
-      confirmMessage:
-        "您正在申請解鎖這筆共享節點質押。這將安排服務節點停止運行；在服務節點到期前，您仍會繼續獲得獎勵。是否繼續？",
+      message: "是否要解鎖此服務節點?",
+      confirmSharedMessage:
+        "您正在申請解鎖這筆共享節點質押,預計將在區塊高度 {height} 解鎖,約需 {days} 天.在共享節點到期前,所有參與者仍會繼續獲得獎勵.是否解鎖?",
+      confirmServiceMessage:
+        "您正在申請解鎖這筆服務節點質押,預計將在區塊高度 {height} 解鎖,約需 {days} 天.在服務節點到期前,您仍會繼續獲得獎勵.是否解鎖?",
       ok: "解鎖"
     },
     unlockServiceNodeWarning: {
       title: "解鎖服務節點警告",
       message:
-        "解鎖共享節點中的部分質押也會同時解除其他參與者的質押。如果在共享節點中質押，最好通知營運者和其他參與者您即將解除質押。",
+        "解鎖共享節點中的部分質押也會同時解除其他參與者的質押.如果在共享節點中質押,最好通知營運者和其他參與者您即將解除質押.",
       ok: "繼續"
     }
   },
@@ -370,12 +372,13 @@ export default {
       signatureVerified: "簽名驗證通過",
       stakeSuccess: "質押成功",
       unlockServiceNodeSuccess: "服務節點解鎖成功",
+      unlockServiceNodeSubmitted: "解鎖請求已提交,等待網路確認",
       transactionNotesSaved: "交易備註已儲存",
       walletCopied: "錢包地址已複製到剪貼簿"
     },
     errors: {
       banningPeer: "封鎖節點時發生錯誤",
-      cannotAccessRemoteNode: "無法存取遠端節點，請嘗試其他遠端節點",
+      cannotAccessRemoteNode: "無法存取遠端節點,請嘗試其他遠端節點",
       changingPassword: "變更密碼時發生錯誤",
       copyWalletFail: "複製錢包失敗",
       copyingPrivateKeys: "複製私鑰時發生錯誤",
@@ -390,9 +393,9 @@ export default {
       errorSavingItem: "儲存 {item} 時發生錯誤",
       exportTransfers: "匯出交易記錄時發生錯誤",
       failedServiceNodeUnlock: "服務節點解鎖失敗",
-      failedToSetLanguage: "設定語言失敗：{lang}",
+      failedToSetLanguage: "設定語言失敗:{lang}",
       failedWalletImport: "匯入錢包失敗",
-      failedWalletOpen: "開啟錢包失敗，請重試。",
+      failedWalletOpen: "開啟錢包失敗,請重試.",
       failedWalletRead: "讀取錢包失敗",
       internalError: "內部錯誤",
       invalidAddress: "地址無效",
@@ -436,8 +439,8 @@ export default {
     warnings: {
       noExportTransfers: "沒有找到可匯出的交易記錄",
       noKeyImageExport: "沒有找到可匯出的金鑰影像",
-      usingLocalNode: "無法存取遠端節點，已切換為僅使用本地節點",
-      usingRemoteNode: "找不到 judecoind，改用遠端節點"
+      usingLocalNode: "無法存取遠端節點,已切換為僅使用本地節點",
+      usingRemoteNode: "找不到 judecoind,改用遠端節點"
     }
   },
   placeholders: {
@@ -485,10 +488,10 @@ export default {
       bannedUntil: "封鎖至 {time}"
     },
     blockHeight: "高度",
-    cannotSign: "僅供查看的錢包無法進行簽名。",
+    cannotSign: "僅供查看的錢包無法進行簽名.",
     checkTransaction: {
       description:
-        "透過提供交易 ID、收款方地址、簽署時使用的訊息和簽名，驗證資金是否已支付至指定地址。\n若為「支付證明」，則不需要提供收款方地址。",
+        "透過提供交易 ID、收款方地址、簽署時使用的訊息和簽名,驗證資金是否已支付至指定地址.\n若為「支付證明」,則不需要提供收款方地址.",
       infoTitles: {
         confirmations: "確認數",
         inPool: "在交易池中",
@@ -508,16 +511,16 @@ export default {
       local: {
         title: "僅本地節點",
         description:
-          "最高安全性，錢包將下載完整的區塊鏈。在同步完成之前將無法進行交易。"
+          "最高安全性,錢包將下載完整的區塊鏈.在同步完成之前將無法進行交易."
       },
       localRemote: {
         title: "本地 + 遠端節點",
         description:
-          "使用此預設選項快速開始。錢包將下載完整的區塊鏈，但在同步期間使用遠端節點。"
+          "使用此預設選項快速開始.錢包將下載完整的區塊鏈,但在同步期間使用遠端節點."
       },
       remote: {
         title: "僅遠端節點",
-        description: "安全性較低，錢包將連線至遠端節點進行所有交易。"
+        description: "安全性較低,錢包將連線至遠端節點進行所有交易."
       }
     },
     destinationUnknown: "目的地未知",
@@ -529,18 +532,18 @@ export default {
       wallet: "錢包地址",
       lokinetName1Year: "Lokinet 名稱 1 年",
       lokinetNameXYears: "Lokinet 名稱 {years} 年",
-      prices: "ONS 價格："
+      prices: "ONS 價格:"
     },
     onsPurchaseDescription:
-      "購買或更新 ONS 記錄。如果您購買了一個名稱，可能需要一兩分鐘才會顯示在清單中。",
+      "購買或更新 ONS 記錄.如果您購買了一個名稱,可能需要一兩分鐘才會顯示在清單中.",
     onsDescription:
-      "這裡可以查看此錢包擁有的所有 ONS 名稱。解密您擁有的記錄將返回該 ONS 記錄的名稱和值。",
+      "這裡可以查看此錢包擁有的所有 ONS 名稱.解密您擁有的記錄將返回該 ONS 記錄的名稱和值.",
     hardwareWallet: "硬體錢包",
     hardwareWallets: "硬體錢包",
     loadingSettings: "正在載入設定",
     judeBalance: "餘額",
     lokinetNameDescription:
-      "在 Lokinet 上購買或更新名稱。如果您購買了一個名稱，可能需要一兩分鐘才會顯示在清單中。如需了解更多關於 Lokinet 的資訊，請造訪：",
+      "在 Lokinet 上購買或更新名稱.如果您購買了一個名稱,可能需要一兩分鐘才會顯示在清單中.如需了解更多關於 Lokinet 的資訊,請造訪:",
     judeAccumulatedRewards: "累計獎勵",
     judeUnlockedBalance: "可用餘額",
     judeUnlockedShort: "可用",
@@ -561,23 +564,23 @@ export default {
     },
 
     proveTransactionDescription:
-      "透過提供交易 ID、收款方地址和選填訊息，產生您的收款/付款證明。\n對於付款交易，您可以取得「支付證明」來證明交易的發起者身份。在這種情況下，不需要指定收款方地址。",
+      "透過提供交易 ID、收款方地址和選填訊息,產生您的收款/付款證明.\n對於付款交易,您可以取得「支付證明」來證明交易的發起者身份.在這種情況下,不需要指定收款方地址.",
     readingWalletList: "正在讀取錢包清單",
     recentIncomingTransactionsToAddress: "此地址的近期收款交易",
     recentTransactionsWithAddress: "與此地址的近期交易",
     regularWallets: "一般錢包",
-    rescanModalDescription: "選擇完整重新掃描或僅重新掃描已花費輸出。",
-    saveSeedWarning: "請將以下內容複製並保存到安全的地方！",
+    rescanModalDescription: "選擇完整重新掃描或僅重新掃描已花費輸出.",
+    saveSeedWarning: "請將以下內容複製並保存到安全的地方!",
     saveToAddressBook: "儲存至地址簿",
     seedWords: "助記詞",
     selectLanguage: "選擇語言",
     registrationStakingMigrationJudeToSessionToken:
-      "由於 Jude 正在遷移至 Session Token，新服務節點的註冊和質押功能已暫時停用。閱讀更多：",
+      "由於 Jude 正在遷移至 Session Token,新服務節點的註冊和質押功能已暫時停用.閱讀更多:",
     serviceNodeContributionDescription:
-      "質押有助於維護 Judecoin 網路的安全性。作為回報，您將獲得 JUDE 獎勵。如需了解更多關於質押的資訊，請造訪",
+      "質押有助於維護 Judecoin 網路的安全性.作為回報,您將獲得 JUDE 獎勵.如需了解更多關於質押的資訊,請造訪",
     serviceNodeRegistrationDescription:
       '輸入由正在註冊成為服務節點的節點程式使用 "{prepareCommand}" 指令產生的 {registerCommand} 指令',
-    serviceNodeStartStakingDescription: "要開始質押，請前往質押分頁",
+    serviceNodeStartStakingDescription: "要開始質押,請前往質押分頁",
     noServiceNodesCurrentlyAvailable: "目前沒有可供貢獻的服務節點",
     serviceNodeStatus: {
       active: "運行中",
@@ -603,7 +606,7 @@ export default {
       totalContributed: "總貢獻額"
     },
     signAndVerifyDescription:
-      "使用主地址的私鑰簽署資料，或使用公開地址驗證簽名。",
+      "使用主地址的私鑰簽署資料,或使用公開地址驗證簽名.",
     spendKey: "支出密鑰",
     stake: "質押",
     startingDaemon: "正在啟動節點程式",
@@ -642,6 +645,7 @@ export default {
         serviceNode: "區塊獎勵",
         governance: "治理",
         stake: "質押",
+        unlock: "服務節點解鎖",
         failed: "失敗"
       }
     },
@@ -650,7 +654,7 @@ export default {
     userNotUsedAddress: "您尚未使用此地址",
     userUsedAddress: "您已使用此地址",
     viewKey: "查看密鑰",
-    viewOnlyMode: "僅供查看模式。請載入完整錢包以發送幣。",
+    viewOnlyMode: "僅供查看模式.請載入完整錢包以發送幣.",
     website: "社區網站"
   },
   titles: {

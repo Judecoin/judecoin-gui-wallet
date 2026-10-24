@@ -1,8 +1,8 @@
 {
   "name": "jude-wallet-gui",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Desktop GUI wallet for Judecoin cryptocurrency",
-  "homepage": "https://www.judecoin.info",
+  "homepage": "https://github.com/Judecoin",
   "repository": {
     "type": "git",
     "url": "https://github.com/Judecoin/judecoin-gui-wallet.git"
@@ -25,6 +25,9 @@
     "test:v4-release": "node scripts/check-v4-release.js",
     "test:release-hygiene": "node scripts/check-release-hygiene.js",
     "test:runtime-safety": "node scripts/check-runtime-safety.js",
+    "test:unlock-relay": "node scripts/check-unlock-relay.js",
+    "test:unlock-history": "node scripts/check-unlock-history.js",
+    "test:gateway-update-gate": "node scripts/check-gateway-update-gate.js",
     "test:transaction-types": "node scripts/check-transaction-type-compatibility.js",
     "build-publish": "quasar build --mode electron --publish=always",
     "windows-publish": "quasar build --mode electron --publish=always -T win",
@@ -55,7 +58,7 @@
     "babel-loader": "8.4.1",
     "devtron": "^1.4.0",
     "dotenv": "^8.1.0",
-    "electron": "41.10.3",
+    "electron": "43.8.3",
     "electron-builder": "26.15.3",
     "electron-debug": "^2.1.0",
     "electron-devtools-installer": "^2.2.4",

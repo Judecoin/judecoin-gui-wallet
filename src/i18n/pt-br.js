@@ -157,8 +157,10 @@ export default {
       title: "Desbloquear nódulo de serviço",
       confirmTitle: "Confirmar desbloqueio",
       message: "Deseja desbloquear o nódulo de serviço?",
-      confirmMessage:
-        "Você está solicitando o desbloqueio desta participação em um nódulo compartilhado. Isso programará a desativação do nódulo de serviço. Você continuará recebendo recompensas até o nódulo expirar. Deseja continuar?",
+      confirmSharedMessage:
+        "Você está solicitando o desbloqueio desta participação em um nódulo compartilhado, previsto para a altura de bloco {height}, em aproximadamente {days} dias. Todos os participantes continuarão recebendo recompensas até o nódulo compartilhado expirar. Deseja desbloqueá-la?",
+      confirmServiceMessage:
+        "Você está solicitando o desbloqueio desta participação em um nódulo de serviço, previsto para a altura de bloco {height}, em aproximadamente {days} dias. Você continuará recebendo recompensas até o nódulo de serviço expirar. Deseja desbloqueá-la?",
       ok: "DESBLOQUEAR"
     },
     unlockServiceNodeWarning: {
@@ -280,6 +282,8 @@ export default {
       signatureCopied: "Signature copied to clipboard",
       stakeSuccess: "Participação com sucesso",
       unlockServiceNodeSuccess: "Nó de serviço desbloqueado com sucesso",
+      unlockServiceNodeSubmitted:
+        "Solicitação de desbloqueio enviada; aguardando confirmação da rede",
       transactionNotesSaved: "A nota de transação foi salva"
     },
     errors: {
@@ -467,6 +471,7 @@ export default {
         serviceNode: "Recompensa de bloco",
         governance: "Governança",
         stake: "Participação",
+        unlock: "Desbloqueio de nó de serviço",
         failed: "Falhou"
       }
     },

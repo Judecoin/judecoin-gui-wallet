@@ -89,6 +89,8 @@ export default {
           return i18n.t("strings.transactions.types.governance");
         case "stake":
           return i18n.t("strings.transactions.types.stake");
+        case "unlock":
+          return i18n.t("strings.transactions.types.unlock");
         default:
           return "-";
       }
@@ -196,7 +198,7 @@ export default {
   methods: {
     filterTxList() {
       const all_in = ["in", "pool", "miner", "snode", "gov"];
-      const all_out = ["out", "pending", "stake"];
+      const all_out = ["out", "pending", "stake", "unlock"];
       const all_pending = ["pending", "pool"];
       this.tx_list_filtered = this.tx_list.filter(tx => {
         let valid = true;

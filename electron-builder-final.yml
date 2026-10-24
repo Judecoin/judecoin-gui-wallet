@@ -1,9 +1,9 @@
 appId: com.jude.desktop-wallet
 productName: jude-wallet-gui
 copyright: Copyright © 2024-2026 Judecoin Community
-electronVersion: 41.10.3
+electronVersion: 43.8.3
 npmRebuild: false
-artifactName: Jude-Wallet-gui-4.0.0-Windows-x64.${ext}
+artifactName: Jude-Wallet-gui-4.0.1-Windows-x64.${ext}
 directories:
   app: dist/electron/UnPackaged
   output: dist/electron/Packaged

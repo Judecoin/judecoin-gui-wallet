@@ -134,7 +134,7 @@ export default {
           this.$refs.wallet.className = "grey";
           break;
         case 4:
-          this.version = "Jude Wallet GUI (v4.0.0-release)";
+          this.version = "Jude Wallet GUI (v4.0.1-release)";
           break;
         case 5:
           this.$q.notify({

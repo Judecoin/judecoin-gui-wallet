@@ -2,6 +2,9 @@ import { ipcRenderer } from "src/electron-api";
 import { Notify, Dialog, Loading, LocalStorage } from "quasar";
 import { i18n, changeLanguage } from "src/boot/i18n";
 const { emitAddressValidation } = require("src/utils/address-validation-event");
+const {
+  shouldDeferGatewayEvent
+} = require("src/utils/gateway-update-gate");
 
 class EventEmitter {
   constructor() {
@@ -40,6 +43,7 @@ export class Gateway extends EventEmitter {
     this.app = app;
     this.router = router;
     this.token = null;
+    this.backgroundUpdatesPaused = false;
 
     // The wallet always opens in English; switching language via the
     // titlebar applies to the current session only (client requirement)
@@ -166,6 +170,14 @@ export class Gateway extends EventEmitter {
     return Array.isArray(key) ? i18n.t(...key) : i18n.t(key);
   }
 
+  pauseBackgroundUpdates() {
+    this.backgroundUpdatesPaused = true;
+  }
+
+  resumeBackgroundUpdates() {
+    this.backgroundUpdatesPaused = false;
+  }
+
   receive(message) {
     let decrypted_data;
     try {
@@ -178,6 +190,15 @@ export class Gateway extends EventEmitter {
       typeof decrypted_data !== "object" ||
       !decrypted_data.hasOwnProperty("event") ||
       !decrypted_data.hasOwnProperty("data")
+    ) {
+      return;
+    }
+
+    if (
+      shouldDeferGatewayEvent(
+        decrypted_data.event,
+        this.backgroundUpdatesPaused
+      )
     ) {
       return;
     }
@@ -215,6 +236,7 @@ export class Gateway extends EventEmitter {
         break;
 
       case "set_tx_status": {
+        this.resumeBackgroundUpdates();
         const data = { ...decrypted_data.data };
         if (data.i18n) {
           data.message = this.geti18n(data.i18n);

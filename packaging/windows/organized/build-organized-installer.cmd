@@ -30,5 +30,5 @@ makensis "packaging\windows\organized\launcher-rpc.nsi" || exit /b 1
 makensis "packaging\windows\organized\installer.nsi" || exit /b 1
 
 echo.
-echo Created dist\electron\Packaged\Jude-Wallet-gui-4.0.0-Windows-x64.exe
+echo Created dist\electron\Packaged\Jude-Wallet-gui-4.0.1-Windows-x64.exe
 exit /b 0

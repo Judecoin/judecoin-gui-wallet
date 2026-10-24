@@ -213,7 +213,6 @@ function createWindow() {
     height: mainWindowState.height,
     minWidth: 880,
     minHeight: 580,
-    show: false,
     // Frameless: window chrome is drawn by the renderer (components/titlebar.vue)
     frame: false,
     backgroundColor: "#0D1117",
@@ -235,6 +234,7 @@ function createWindow() {
 
   mainWindow.once("ready-to-show", () => {
     mainWindow.show();
+    mainWindow.focus();
     // Quasar 1's desktop drawer occasionally measures the initial Windows
     // viewport before the frameless window is visible. A one-pixel native
     // resize triggers the same correct reflow users previously got by

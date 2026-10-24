@@ -28,17 +28,44 @@ for (const file of fs.readdirSync(i18nDir)) {
     `${file}: service-node rewards use the block-reward label`
   );
   assert.doesNotMatch(locale, /180\s*(?:days|giorni|日|일|dagen|天)/i);
-  assert.match(
-    locale,
-    /unlockServiceNode:\s*\{[\s\S]*?confirmMessage:/,
-    `${file}: unlock confirmation is localized`
-  );
+  for (const key of ["confirmSharedMessage", "confirmServiceMessage"]) {
+    const message = locale.match(
+      new RegExp(`${key}:\\s*(?:\\n\\s*)?"([^"]+)"`)
+    );
+    assert.ok(message, `${file}: ${key} is localized`);
+    assert.match(message[1], /\{height\}/, `${file}: ${key} shows height`);
+    assert.match(message[1], /\{days\}/, `${file}: ${key} shows days`);
+  }
   assert.match(
     locale,
     /unlockServiceNodeSuccess:/,
     `${file}: unlock success is localized`
   );
 }
+
+const zhCn = fs.readFileSync(path.join(i18nDir, "zh-cn.js"), "utf8");
+assert.match(
+  zhCn,
+  /您正在申请解锁这笔共享节点质押，预计将在区块高度 \{height\} 解锁，约需 \{days\} 天。[^\n]*是否解锁？/
+);
+assert.match(
+  zhCn,
+  /您正在申请解锁这笔服务节点质押，预计将在区块高度 \{height\} 解锁，约需 \{days\} 天。[^\n]*是否解锁？/
+);
+const zhTw = fs.readFileSync(path.join(i18nDir, "zh-tw.js"), "utf8");
+assert.doesNotMatch(
+  zhTw,
+  /[，。！？：；]/,
+  "zh-tw: use baseline punctuation for horizontal Linux rendering"
+);
+assert.match(
+  zhTw,
+  /您正在申請解鎖這筆共享節點質押,預計將在區塊高度 \{height\} 解鎖,約需 \{days\} 天\.[^\n]*是否解鎖\?/
+);
+assert.match(
+  zhTw,
+  /您正在申請解鎖這筆服務節點質押,預計將在區塊高度 \{height\} 解鎖,約需 \{days\} 天\.[^\n]*是否解鎖\?/
+);
 
 const txList = fs.readFileSync(
   path.join(root, "src/components/tx_list.vue"),
@@ -72,11 +99,28 @@ for (const locale of [
   );
 }
 
+const i18nBoot = fs.readFileSync(path.join(root, "src/boot/i18n.js"), "utf8");
+for (const [locale, quasarLocale] of [
+  ["zh-cn", "zh-hans"],
+  ["zh-tw", "zh-hant"],
+  ["ko", "ko-kr"]
+]) {
+  assert.match(
+    i18nBoot,
+    new RegExp(`(?:["']${locale}["']|${locale})\\s*:\\s*"${quasarLocale}"`),
+    `Quasar locale maps ${locale} to ${quasarLocale}`
+  );
+}
+
 const unlock = fs.readFileSync(
   path.join(root, "src/components/service_node/service_node_unlock.vue"),
   "utf8"
 );
-assert.match(unlock, /dialog\.unlockServiceNode\.confirmMessage/);
+assert.match(unlock, /dialog\.unlockServiceNode\.confirmSharedMessage/);
+assert.match(unlock, /dialog\.unlockServiceNode\.confirmServiceMessage/);
+assert.match(unlock, /unlockHeight/);
+assert.match(unlock, /Math\.ceil/);
+assert.match(unlock, /180/);
 
 const backend = fs.readFileSync(
   path.join(root, "src-electron/main-process/modules/backend.js"),
@@ -120,8 +164,22 @@ for (const file of productVersionFiles) {
   assert.doesNotMatch(contents, /3\.2\.0/, `${file}: stale wallet version`);
 }
 const packageJson = require(path.join(root, "package.json"));
-assert.strictEqual(packageJson.version, "4.0.0");
+assert.strictEqual(packageJson.version, "4.0.1");
+assert.strictEqual(packageJson.devDependencies.electron, "43.8.3");
+for (const builderConfig of [
+  "electron-builder-final.yml",
+  "electron-builder-final-linux.yml"
+]) {
+  assert.match(
+    fs.readFileSync(path.join(root, builderConfig), "utf8"),
+    /^electronVersion: 43\.8\.3$/m,
+    `${builderConfig}: Electron version matches package.json`
+  );
+}
 assert.match(packageJson.scripts.windows, /(?:^|\s)-A x64(?:\s|$)/);
+const pnpmLock = fs.readFileSync(path.join(root, "pnpm-lock.yaml"), "utf8");
+assert.match(pnpmLock, /electron@43\.8\.3:/);
+assert.doesNotMatch(pnpmLock, /electron@41\.10\.3/);
 
 const sha256 = file =>
   crypto

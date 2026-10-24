@@ -177,8 +177,10 @@ export default {
       title: "Liberar nodo de servicio",
       confirmTitle: "Confirmar liberación",
       message: "¿Desea liberar el nodo de servicio?",
-      confirmMessage:
-        "Está solicitando desbloquear esta participación en un nodo compartido. Esto programará la desactivación del nodo de servicio. Continuará recibiendo recompensas hasta que el nodo expire. ¿Desea continuar?",
+      confirmSharedMessage:
+        "Está solicitando desbloquear esta participación en un nodo compartido, que se espera que se desbloquee en la altura de bloque {height}, en aproximadamente {days} días. Todos los participantes seguirán recibiendo recompensas hasta que el nodo compartido expire. ¿Desea desbloquearla?",
+      confirmServiceMessage:
+        "Está solicitando desbloquear esta participación en un nodo de servicio, que se espera que se desbloquee en la altura de bloque {height}, en aproximadamente {days} días. Seguirá recibiendo recompensas hasta que el nodo de servicio expire. ¿Desea desbloquearla?",
       ok: "LIBERAR"
     },
     unlockServiceNodeWarning: {
@@ -303,6 +305,8 @@ export default {
       signatureCopied: "Firma copiada al portapapeles",
       stakeSuccess: "Participación retenida correctamente",
       unlockServiceNodeSuccess: "Nodo de servicio desbloqueado correctamente",
+      unlockServiceNodeSubmitted:
+        "Solicitud de desbloqueo enviada; esperando confirmación de la red",
       transactionNotesSaved: "Notas de la transacción guardadas"
     },
     errors: {
@@ -498,6 +502,7 @@ export default {
         serviceNode: "Recompensa de bloque",
         governance: "Gobernanza",
         stake: "Participación retenida",
+        unlock: "Desbloqueo de nodo de servicio",
         failed: "Fallida"
       }
     },

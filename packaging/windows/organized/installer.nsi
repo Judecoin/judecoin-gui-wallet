@@ -5,19 +5,19 @@ SetCompressor /SOLID lzma
 
 !include "MUI2.nsh"
 
-Name "Jude Wallet GUI 4.0.0"
-OutFile "dist/electron/Packaged/Jude-Wallet-gui-4.0.0-Windows-x64.exe"
+Name "Jude Wallet GUI 4.0.1"
+OutFile "dist/electron/Packaged/Jude-Wallet-gui-4.0.1-Windows-x64.exe"
 InstallDir "$LOCALAPPDATA\Programs\Jude Wallet"
 InstallDirRegKey HKCU "Software\Jude Wallet" "InstallDir"
 
 Icon "src-electron/icons/icon.ico"
 UninstallIcon "src-electron/icons/icon.ico"
 
-VIProductVersion "4.0.0.0"
+VIProductVersion "4.0.1.0"
 VIAddVersionKey "ProductName" "Jude Wallet GUI"
 VIAddVersionKey "FileDescription" "Jude Wallet GUI Installer"
-VIAddVersionKey "FileVersion" "4.0.0"
-VIAddVersionKey "ProductVersion" "4.0.0"
+VIAddVersionKey "FileVersion" "4.0.1"
+VIAddVersionKey "ProductVersion" "4.0.1"
 
 !define MUI_ABORTWARNING
 !define MUI_ICON "src-electron/icons/icon.ico"
@@ -75,9 +75,9 @@ Section "Jude Wallet GUI" SEC_MAIN
   CreateShortcut "$DESKTOP\Jude Wallet.lnk" "$INSTDIR\jude-wallet-gui.exe" "" "$INSTDIR\Jude-Wallet.ico"
 
   WriteRegStr HKCU "Software\Jude Wallet" "InstallDir" "$INSTDIR"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Jude Wallet" "DisplayName" "Jude Wallet GUI 4.0.0"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Jude Wallet" "DisplayName" "Jude Wallet GUI 4.0.1"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Jude Wallet" "DisplayIcon" "$INSTDIR\Jude-Wallet.ico"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Jude Wallet" "DisplayVersion" "4.0.0"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Jude Wallet" "DisplayVersion" "4.0.1"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Jude Wallet" "UninstallString" '"$INSTDIR\runtime\Uninstall.exe"'
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Jude Wallet" "NoModify" 1
   WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Jude Wallet" "NoRepair" 1

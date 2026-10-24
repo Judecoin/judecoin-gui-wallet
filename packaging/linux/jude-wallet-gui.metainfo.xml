@@ -10,5 +10,5 @@
   </description>
   <launchable type="desktop-id">jude-wallet-gui.desktop</launchable>
   <icon type="stock">jude-wallet-gui</icon>
-  <url type="homepage">https://www.judecoin.info</url>
+  <url type="homepage">https://github.com/Judecoin</url>
 </component>

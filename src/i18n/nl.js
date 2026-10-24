@@ -219,8 +219,10 @@ export default {
       title: "Service node ontgrendelen",
       confirmTitle: "Ontgrendeling bevestigen",
       message: "Wilt u de service node ontgrendelen?",
-      confirmMessage:
-        "U vraagt om deze inzet in een gedeeld service node te ontgrendelen. Hierdoor wordt de deactivering van het service node gepland. U blijft beloningen ontvangen totdat het node verloopt. Wilt u doorgaan?",
+      confirmSharedMessage:
+        "U vraagt om deze inzet in een gedeelde node te ontgrendelen, naar verwachting op blokhoogte {height}, over ongeveer {days} dagen. Alle deelnemers blijven beloningen ontvangen totdat de gedeelde node verloopt. Wilt u deze inzet ontgrendelen?",
+      confirmServiceMessage:
+        "U vraagt om deze inzet in een service node te ontgrendelen, naar verwachting op blokhoogte {height}, over ongeveer {days} dagen. U blijft beloningen ontvangen totdat de service node verloopt. Wilt u deze inzet ontgrendelen?",
       ok: "ONTGRENDELEN"
     },
     unlockServiceNodeWarning: {
@@ -377,6 +379,8 @@ export default {
       signatureVerified: "Handtekening geverifieerd",
       stakeSuccess: "Succesvol gestaked",
       unlockServiceNodeSuccess: "Service node succesvol ontgrendeld",
+      unlockServiceNodeSubmitted:
+        "Ontgrendelingsverzoek ingediend; wachten op netwerkbevestiging",
       transactionNotesSaved: "Transactienotities opgeslagen",
       walletCopied: "Portemonnee-adres gekopieerd naar klembord"
     },
@@ -664,6 +668,7 @@ export default {
         serviceNode: "Blokbeloning",
         governance: "Governance",
         stake: "Stake",
+        unlock: "Service-node ontgrendeling",
         failed: "Mislukt"
       }
     },

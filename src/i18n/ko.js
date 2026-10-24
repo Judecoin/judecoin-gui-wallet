@@ -218,8 +218,10 @@ export default {
       title: "서비스 노드 잠금 해제",
       confirmTitle: "잠금 해제 확인",
       message: "서비스 노드를 잠금 해제하시겠습니까?",
-      confirmMessage:
-        "공유 노드의 이 스테이크에 대한 잠금 해제를 요청합니다. 서비스 노드가 비활성화되도록 예약되며, 노드가 만료될 때까지 보상을 계속 받습니다. 계속하시겠습니까?",
+      confirmSharedMessage:
+        "공유 노드의 이 스테이크에 대한 잠금 해제를 요청하며, 블록 높이 {height}에서 약 {days}일 후 잠금 해제될 예정입니다. 공유 노드가 만료될 때까지 모든 참여자가 계속 보상을 받습니다. 잠금 해제하시겠습니까?",
+      confirmServiceMessage:
+        "서비스 노드의 이 스테이크에 대한 잠금 해제를 요청하며, 블록 높이 {height}에서 약 {days}일 후 잠금 해제될 예정입니다. 서비스 노드가 만료될 때까지 계속 보상을 받습니다. 잠금 해제하시겠습니까?",
       ok: "잠금 해제"
     },
     unlockServiceNodeWarning: {
@@ -376,6 +378,8 @@ export default {
       signatureVerified: "서명이 검증되었습니다",
       stakeSuccess: "스테이킹에 성공했습니다",
       unlockServiceNodeSuccess: "서비스 노드 잠금 해제에 성공했습니다",
+      unlockServiceNodeSubmitted:
+        "잠금 해제 요청을 제출했습니다. 네트워크 확인을 기다리는 중입니다",
       transactionNotesSaved: "트랜잭션 메모가 저장되었습니다",
       walletCopied: "지갑 주소가 클립보드에 복사되었습니다"
     },
@@ -652,6 +656,7 @@ export default {
         serviceNode: "블록 보상",
         governance: "거버넌스",
         stake: "스테이킹",
+        unlock: "서비스 노드 잠금 해제",
         failed: "실패"
       }
     },

@@ -85,6 +85,10 @@ export default {
           value: "stake"
         },
         {
+          label: this.$t("strings.transactions.types.unlock"),
+          value: "unlock"
+        },
+        {
           label: this.$t("strings.transactions.types.failed"),
           value: "failed"
         }
