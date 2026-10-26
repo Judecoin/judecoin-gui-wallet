@@ -1854,7 +1854,9 @@ export class WalletRPC {
             daemon: this.backend.daemon,
             expectedKeyImages: stake_key_images,
             requestUnlock: () => sendRPC("request_stake_unlock"),
-            readUnlockHashes
+            readUnlockHashes,
+            submitRawUnlock: transaction =>
+              this.backend.daemon.submitUnlockTransaction(transaction)
           })
             .then(data => {
               if (!data) return;

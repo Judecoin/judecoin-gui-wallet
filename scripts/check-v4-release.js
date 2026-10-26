@@ -164,7 +164,7 @@ for (const file of productVersionFiles) {
   assert.doesNotMatch(contents, /3\.2\.0/, `${file}: stale wallet version`);
 }
 const packageJson = require(path.join(root, "package.json"));
-assert.strictEqual(packageJson.version, "4.0.1");
+assert.strictEqual(packageJson.version, "4.0.2");
 assert.strictEqual(packageJson.devDependencies.electron, "43.8.3");
 for (const builderConfig of [
   "electron-builder-final.yml",

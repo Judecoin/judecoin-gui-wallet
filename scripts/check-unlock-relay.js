@@ -11,18 +11,29 @@ const keyImage = "a".repeat(64);
 const otherKeyImage = "b".repeat(64);
 const oldHash = "1".repeat(64);
 const unlockHash = "2".repeat(64);
+const unlockBlob = "ab".repeat(142);
 
 const walletRpc = fs.readFileSync(
   path.join(__dirname, "../src-electron/main-process/modules/wallet-rpc.js"),
   "utf8"
 );
+const daemon = fs.readFileSync(
+  path.join(__dirname, "../src-electron/main-process/modules/daemon.js"),
+  "utf8"
+);
 assert.match(walletRpc, /relayLocalUnlock/);
 assert.match(walletRpc, /params\.stake_key_images/);
+assert.match(walletRpc, /submitRawUnlock/);
+assert.match(walletRpc, /submitUnlockTransaction/);
+assert.match(daemon, /\/sendrawtransaction/);
+assert.match(daemon, /do_sanity_checks:\s*true/);
+assert.match(daemon, /\.\.\.rpcRequestSafety\(\)/);
 
 const unlockTx = (overrides = {}) => ({
   id_hash: unlockHash,
   fee: 0,
   relayed: false,
+  tx_blob: unlockBlob,
   extra: {
     type: "key_image_unlock",
     key_image_unlock: keyImage
@@ -136,6 +147,7 @@ const makeDaemon = ({ local = true, hostname = "127.0.0.1" } = {}) => {
 
 (async () => {
   let unlockCalls = 0;
+  const submittedUnlocks = [];
   const daemon = makeDaemon();
   const result = await relayLocalUnlock({
     daemon,
@@ -143,6 +155,10 @@ const makeDaemon = ({ local = true, hostname = "127.0.0.1" } = {}) => {
     requestUnlock: async () => {
       unlockCalls += 1;
       return { unlocked: true, msg: "ok" };
+    },
+    submitRawUnlock: async transaction => {
+      submittedUnlocks.push(transaction);
+      return true;
     }
   });
   assert.deepStrictEqual(result, {
@@ -151,25 +167,36 @@ const makeDaemon = ({ local = true, hostname = "127.0.0.1" } = {}) => {
     submitted: true
   });
   assert.strictEqual(unlockCalls, 1);
+  assert.deepStrictEqual(submittedUnlocks, [
+    { txid: unlockHash, txBlob: unlockBlob }
+  ]);
   assert.deepStrictEqual(
     daemon.calls.map(call => call.method),
     ["get_transaction_pool", "get_transaction_pool"]
   );
 
   const locallyPending = makeDaemon();
+  const locallySubmitted = [];
   const recovered = await relayLocalUnlock({
     daemon: locallyPending,
     expectedKeyImages: [keyImage],
     requestUnlock: async () => ({
       unlocked: false,
       msg: "The local daemon did not relay the unlock transaction"
-    })
+    }),
+    submitRawUnlock: async transaction => {
+      locallySubmitted.push(transaction);
+      return true;
+    }
   });
   assert.deepStrictEqual(recovered, {
     unlocked: false,
     msg: "The local daemon did not relay the unlock transaction",
     submitted: true
   });
+  assert.deepStrictEqual(locallySubmitted, [
+    { txid: unlockHash, txBlob: unlockBlob }
+  ]);
   assert.deepStrictEqual(
     locallyPending.calls.map(call => call.method),
     ["get_transaction_pool", "get_transaction_pool"]
@@ -211,6 +238,13 @@ const makeDaemon = ({ local = true, hostname = "127.0.0.1" } = {}) => {
     requestUnlock: async () => {
       duplicateUnlockCalls += 1;
       return { unlocked: true };
+    },
+    submitRawUnlock: async transaction => {
+      assert.deepStrictEqual(transaction, {
+        txid: unlockHash,
+        txBlob: unlockBlob
+      });
+      return true;
     }
   });
   assert.deepStrictEqual(resumed, { unlocked: false, submitted: true });
@@ -223,6 +257,136 @@ const makeDaemon = ({ local = true, hostname = "127.0.0.1" } = {}) => {
     existingPending.calls.map(call => call.method),
     ["get_transaction_pool"]
   );
+
+  let failedRelayUnlockCalls = 0;
+  const failedRelay = makeDaemon();
+  assert.deepStrictEqual(
+    await relayLocalUnlock({
+      daemon: failedRelay,
+      expectedKeyImages: [keyImage],
+      requestUnlock: async () => {
+        failedRelayUnlockCalls += 1;
+        return { unlocked: true, msg: "ok" };
+      },
+      submitRawUnlock: async () => false
+    }),
+    { unlocked: false, msg: "ok" },
+    "does not report success when no remote accepts the local unlock"
+  );
+  assert.strictEqual(failedRelayUnlockCalls, 1);
+
+  const missingBlob = makeDaemon();
+  missingBlob.sendRPC = async method => {
+    missingBlob.calls.push({ method });
+    if (method === "get_transaction_pool") {
+      return {
+        result: {
+          status: "OK",
+          transactions: [unlockTx({ tx_blob: "" })]
+        }
+      };
+    }
+    throw new Error(`Unexpected RPC: ${method}`);
+  };
+  let missingBlobSubmissions = 0;
+  assert.deepStrictEqual(
+    await relayLocalUnlock({
+      daemon: missingBlob,
+      expectedKeyImages: [keyImage],
+      requestUnlock: async () => ({ unlocked: true }),
+      submitRawUnlock: async () => {
+        missingBlobSubmissions += 1;
+        return true;
+      }
+    }),
+    { unlocked: false },
+    "does not broadcast or report success without the exact raw transaction"
+  );
+  assert.strictEqual(missingBlobSubmissions, 0);
+
+  let emptyPoolUnlockCalls = 0;
+  const canonicalEmptyPool = makeDaemon();
+  canonicalEmptyPool.sendRPC = async (method, params) => {
+    canonicalEmptyPool.calls.push({ method, params });
+    if (method === "get_transaction_pool") {
+      return { result: { status: "OK", untrusted: false } };
+    }
+    throw new Error(`Unexpected RPC: ${method}`);
+  };
+  assert.deepStrictEqual(
+    await relayLocalUnlock({
+      daemon: canonicalEmptyPool,
+      expectedKeyImages: [keyImage],
+      requestUnlock: async () => {
+        emptyPoolUnlockCalls += 1;
+        return { unlocked: true };
+      }
+    }),
+    { unlocked: true, submitted: true },
+    "accepts the daemon's canonical empty transaction-pool response"
+  );
+  assert.strictEqual(emptyPoolUnlockCalls, 1);
+
+  let unavailablePoolUnlockCalls = 0;
+  const unavailablePool = makeDaemon();
+  unavailablePool.sendRPC = async method => {
+    unavailablePool.calls.push({ method });
+    throw new Error("Local transaction pool temporarily unavailable");
+  };
+  assert.deepStrictEqual(
+    await relayLocalUnlock({
+      daemon: unavailablePool,
+      expectedKeyImages: [keyImage],
+      requestUnlock: async () => {
+        unavailablePoolUnlockCalls += 1;
+        return { unlocked: true };
+      }
+    }),
+    { unlocked: true, submitted: true },
+    "does not let an auxiliary pool check block the core unlock request"
+  );
+  assert.strictEqual(unavailablePoolUnlockCalls, 1);
+
+  let missingMetadataUnlockCalls = 0;
+  assert.deepStrictEqual(
+    await relayLocalUnlock({
+      daemon: makeDaemon(),
+      expectedKeyImages: [],
+      requestUnlock: async () => {
+        missingMetadataUnlockCalls += 1;
+        return { unlocked: true };
+      }
+    }),
+    { unlocked: true, submitted: true },
+    "does not let missing matching metadata block the core unlock request"
+  );
+  assert.strictEqual(missingMetadataUnlockCalls, 1);
+
+  let postPoolReads = 0;
+  let postWalletReads = 0;
+  const postPoolUnavailable = makeDaemon();
+  postPoolUnavailable.sendRPC = async method => {
+    assert.strictEqual(method, "get_transaction_pool");
+    postPoolReads += 1;
+    if (postPoolReads === 1) {
+      return { result: { status: "OK", transactions: [] } };
+    }
+    throw new Error("Local transaction pool temporarily unavailable");
+  };
+  assert.deepStrictEqual(
+    await relayLocalUnlock({
+      daemon: postPoolUnavailable,
+      expectedKeyImages: [keyImage],
+      requestUnlock: async () => ({ unlocked: false }),
+      readUnlockHashes: async () => {
+        postWalletReads += 1;
+        return postWalletReads === 1 ? [oldHash] : [oldHash, unlockHash];
+      }
+    }),
+    { unlocked: false, submitted: true },
+    "uses wallet evidence when the post-submit pool check is unavailable"
+  );
+  assert.strictEqual(postWalletReads, 2);
 
   const remote = makeDaemon({ local: false, hostname: "node.example" });
   await relayLocalUnlock({

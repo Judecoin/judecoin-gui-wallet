@@ -78,50 +78,121 @@ const readPool = async daemon => {
   if (!result || (result.status && result.status !== "OK")) {
     throw new Error("Unable to read the local transaction pool");
   }
-  const transactions = result.transactions || result.txs;
+  const transactions =
+    result.transactions === undefined && result.txs === undefined
+      ? []
+      : result.transactions || result.txs;
   if (!Array.isArray(transactions)) {
     throw new Error("Invalid local transaction pool response");
   }
   return transactions;
 };
 
+const tryReadPool = async daemon => {
+  try {
+    return await readPool(daemon);
+  } catch (error) {
+    return null;
+  }
+};
+
+const tryReadUnlockHashes = async readUnlockHashes => {
+  if (!readUnlockHashes) return null;
+  try {
+    const hashes = await readUnlockHashes();
+    return Array.isArray(hashes) ? hashes : null;
+  } catch (error) {
+    return null;
+  }
+};
+
+const rawUnlock = tx => {
+  const txid = transactionHash(tx);
+  const txBlob = tx && tx.tx_blob;
+  if (
+    !txid ||
+    typeof txBlob !== "string" ||
+    txBlob.length === 0 ||
+    txBlob.length % 2 !== 0 ||
+    !/^[0-9a-f]+$/i.test(txBlob)
+  ) {
+    return null;
+  }
+  return { txid, txBlob };
+};
+
+const trySubmitRawUnlock = async (tx, submitRawUnlock) => {
+  const transaction = rawUnlock(tx);
+  if (!transaction || typeof submitRawUnlock !== "function") return false;
+  try {
+    return (await submitRawUnlock(transaction)) === true;
+  } catch (error) {
+    return false;
+  }
+};
+
 const relayLocalUnlock = async ({
   daemon,
   expectedKeyImages,
   requestUnlock,
-  readUnlockHashes
+  readUnlockHashes,
+  submitRawUnlock
 }) => {
   if (!isLoopbackLocalDaemon(daemon)) return requestUnlock();
 
   const expected = (expectedKeyImages || []).filter(
     keyImage => typeof keyImage === "string" && HEX_32.test(keyImage)
   );
-  if (expected.length === 0) {
-    throw new Error("No valid stake key image was provided");
+  const before = expected.length > 0 ? await tryReadPool(daemon) : null;
+  if (before) {
+    const pending = findUnlockCandidate([], before, expected);
+    if (pending) {
+      if (typeof submitRawUnlock !== "function") {
+        return { unlocked: false, submitted: true };
+      }
+      const submitted = await trySubmitRawUnlock(pending, submitRawUnlock);
+      return submitted
+        ? { unlocked: false, submitted: true }
+        : { unlocked: false };
+    }
   }
 
-  const before = await readPool(daemon);
-  const pending = findUnlockCandidate([], before, expected);
-  if (pending) return { unlocked: false, submitted: true };
-
-  const beforeHashes = before.map(transactionHash).filter(Boolean);
-  const beforeWalletHashes = readUnlockHashes ? await readUnlockHashes() : [];
+  const beforeHashes = before
+    ? before.map(transactionHash).filter(Boolean)
+    : [];
+  const beforeWalletHashes = await tryReadUnlockHashes(readUnlockHashes);
   const result = await requestUnlock();
   if (!result) return result;
 
-  const after = await readPool(daemon);
-  const candidate = findUnlockCandidate(beforeHashes, after, expected);
-  if (candidate) return { ...result, submitted: true };
+  if (typeof submitRawUnlock === "function") {
+    const after = await tryReadPool(daemon);
+    const candidate = findUnlockCandidate(beforeHashes, after, expected);
+    const submitted = await trySubmitRawUnlock(candidate, submitRawUnlock);
+    return submitted
+      ? { ...result, submitted: true }
+      : { ...result, unlocked: false };
+  }
 
-  if (readUnlockHashes) {
+  if (result.unlocked) return { ...result, submitted: true };
+
+  if (before) {
+    const after = await tryReadPool(daemon);
+    const candidate = findUnlockCandidate(beforeHashes, after, expected);
+    if (candidate) return { ...result, submitted: true };
+  }
+
+  if (beforeWalletHashes) {
     const beforeWallet = new Set(beforeWalletHashes);
-    const afterWalletHashes = await readUnlockHashes();
-    if (afterWalletHashes.some(hash => !beforeWallet.has(hash))) {
+    const afterWalletHashes = await tryReadUnlockHashes(readUnlockHashes);
+    if (
+      afterWalletHashes &&
+      afterWalletHashes.some(hash => !beforeWallet.has(hash))
+    ) {
       return { ...result, submitted: true };
     }
   }
 
-  return result.unlocked ? { ...result, submitted: true } : result;
+  return result;
 };
 
 module.exports = {

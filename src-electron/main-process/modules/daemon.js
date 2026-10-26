@@ -721,6 +721,87 @@ export class Daemon {
     );
   }
 
+  async submitUnlockTransaction({ txid, txBlob }) {
+    if (
+      this.net_type !== "mainnet" ||
+      typeof txid !== "string" ||
+      !/^[0-9a-f]{64}$/i.test(txid) ||
+      typeof txBlob !== "string" ||
+      txBlob.length === 0 ||
+      txBlob.length % 2 !== 0 ||
+      !/^[0-9a-f]+$/i.test(txBlob)
+    ) {
+      return false;
+    }
+
+    for (const remote of this.backend.remotes || []) {
+      if (
+        !remote ||
+        typeof remote.host !== "string" ||
+        !Number.isInteger(remote.port)
+      ) {
+        continue;
+      }
+
+      try {
+        const request = {
+          httpAgent: this.agent,
+          method: "POST",
+          ...rpcRequestSafety(),
+          timeout: rpcTimeout()
+        };
+        const submitted = await this.queue.add(() =>
+          axios({
+            ...request,
+            url: `http://${remote.host}:${remote.port}/sendrawtransaction`,
+            data: {
+              tx_as_hex: txBlob,
+              do_not_relay: false,
+              do_sanity_checks: true,
+              blink: false
+            }
+          })
+        );
+        const response = submitted.data;
+        if (
+          !response ||
+          typeof response !== "object" ||
+          Array.isArray(response) ||
+          response.status !== "OK" ||
+          response.not_relayed === true ||
+          response.sanity_check_failed === true
+        ) {
+          continue;
+        }
+
+        const confirmed = await this.queue.add(() =>
+          axios({
+            ...request,
+            url: `http://${remote.host}:${remote.port}/get_transactions`,
+            data: {
+              txs_hashes: [txid],
+              decode_as_json: true,
+              prune: true
+            }
+          })
+        );
+        if (
+          isDaemonTransactionsResponse(confirmed.data) &&
+          confirmed.data.txs.length === 1 &&
+          !(confirmed.data.missed_tx || []).some(
+            hash => typeof hash === "string" && hash.toLowerCase() === txid
+          )
+        ) {
+          return true;
+        }
+      } catch (error) {
+        // Try the next built-in remote node.
+      }
+    }
+
+    return false;
+  }
+
   /**
    * Call one of the get_* RPC calls
    */
