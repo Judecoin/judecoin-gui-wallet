@@ -1,6 +1,6 @@
 {
   "name": "jude-wallet-gui",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "description": "Desktop GUI wallet for Judecoin cryptocurrency",
   "homepage": "https://github.com/Judecoin",
   "repository": {
@@ -26,6 +26,7 @@
     "test:release-hygiene": "node scripts/check-release-hygiene.js",
     "test:runtime-safety": "node scripts/check-runtime-safety.js",
     "test:unlock-relay": "node scripts/check-unlock-relay.js",
+    "test:unlock-submit": "node scripts/check-unlock-submit.js",
     "test:unlock-history": "node scripts/check-unlock-history.js",
     "test:gateway-update-gate": "node scripts/check-gateway-update-gate.js",
     "test:transaction-types": "node scripts/check-transaction-type-compatibility.js",

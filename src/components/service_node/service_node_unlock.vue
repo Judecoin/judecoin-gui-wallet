@@ -40,6 +40,7 @@ import { service_node_key } from "src/validators/common";
 import WalletPassword from "src/mixins/wallet_password";
 import ServiceNodeDetails from "./service_node_details";
 import ServiceNodeList from "./service_node_list";
+import { getStakeKeyImages } from "src/utils/service-node-status";
 
 export default {
   name: "ServiceNodeUnlock",
@@ -239,13 +240,7 @@ export default {
         contributor => contributor.amount > 0
       );
       this.unlockIsShared = contributors.length > 1;
-      const ourContribution = contributors.find(
-        contributor => contributor.address === this.our_address
-      );
-      this.stakeKeyImages = (ourContribution
-        ? ourContribution.locked_contributions || []
-        : []
-      ).map(contribution => contribution.key_image);
+      this.stakeKeyImages = getStakeKeyImages(node, this.our_address);
 
       let passwordDialog = await this.showPasswordConfirmation({
         title: this.$t("dialog.unlockServiceNode.title"),

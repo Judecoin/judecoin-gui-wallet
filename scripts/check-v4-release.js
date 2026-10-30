@@ -164,7 +164,7 @@ for (const file of productVersionFiles) {
   assert.doesNotMatch(contents, /3\.2\.0/, `${file}: stale wallet version`);
 }
 const packageJson = require(path.join(root, "package.json"));
-assert.strictEqual(packageJson.version, "4.0.2");
+assert.strictEqual(packageJson.version, "4.1.0");
 assert.strictEqual(packageJson.devDependencies.electron, "43.8.3");
 for (const builderConfig of [
   "electron-builder-final.yml",
@@ -188,11 +188,11 @@ const sha256 = file =>
     .digest("hex");
 assert.strictEqual(
   sha256("bin/win32/judecoind.exe"),
-  "cee2491b895d90a7176947f7e2f0ff10efe422ff814676fdbce796653d049441"
+  "f7d72cc8231a9d30b416f17b80c1b7c006ea57191648a935b25169332aef78ce"
 );
 assert.strictEqual(
   sha256("bin/win32/judecoin-wallet-rpc.exe"),
-  "f03e82191e9721ef5275692e504afd78f5d3959df6f76bee3164954340d2cd1b"
+  "38c7beabbc2cb8ed9d827857cc952a4c6eb7e3c9541469431c358b8b30cb65d5"
 );
 
 console.log("Jude Wallet v4 release checks passed");

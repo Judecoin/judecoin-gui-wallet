@@ -19,6 +19,18 @@ function classifyServiceNodeStatus(node) {
   return { key: "awaitingContributions" };
 }
 
+function getStakeKeyImages(node, address) {
+  if (node.deregistered) {
+    return node.key_image ? [node.key_image] : [];
+  }
+  const contribution = (node.contributors || []).find(
+    contributor => contributor.address === address && contributor.amount > 0
+  );
+  return (contribution ? contribution.locked_contributions || [] : []).map(
+    locked => locked.key_image
+  );
+}
+
 function reconcileDeregisteredStakes({
   liveNodes,
   blacklist,
@@ -55,5 +67,6 @@ function reconcileDeregisteredStakes({
 
 module.exports = {
   classifyServiceNodeStatus,
+  getStakeKeyImages,
   reconcileDeregisteredStakes
 };

@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const {
   classifyServiceNodeStatus,
+  getStakeKeyImages,
   reconcileDeregisteredStakes
 } = require("../src/utils/service-node-status");
 
@@ -54,6 +55,27 @@ assert.deepStrictEqual(reconciled.deregisteredStakes, [
     contributors: []
   }
 ]);
+assert.deepStrictEqual(
+  getStakeKeyImages(reconciled.deregisteredStakes[0], "wallet-address"),
+  ["owned-old"],
+  "deregistered stake unlock must pass its key image for transaction verification"
+);
+assert.deepStrictEqual(
+  getStakeKeyImages(
+    {
+      contributors: [
+        {
+          address: "wallet-address",
+          amount: 100,
+          locked_contributions: [{ key_image: "owned-live" }]
+        }
+      ]
+    },
+    "wallet-address"
+  ),
+  ["owned-live"],
+  "live stake unlock keeps the existing contribution lookup"
+);
 assert.deepStrictEqual(
   reconcileDeregisteredStakes({
     liveNodes: [],

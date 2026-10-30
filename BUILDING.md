@@ -27,7 +27,7 @@ Build on Linux:
     pnpm exec electron-builder --config electron-builder-final-linux.yml --linux --x64 --publish never
 
 The release outputs AppImage and deb packages. The packaged runtime contains
-only the official v4.0.0 Linux `judecoind` and `judecoin-wallet-rpc` binaries.
+only the official v4.1.0 Linux `judecoind` and `judecoin-wallet-rpc` binaries.
 
 ## Windows x64
 

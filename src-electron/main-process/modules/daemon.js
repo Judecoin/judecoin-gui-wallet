@@ -750,30 +750,22 @@ export class Daemon {
           ...rpcRequestSafety(),
           timeout: rpcTimeout()
         };
-        const submitted = await this.queue.add(() =>
-          axios({
-            ...request,
-            url: `http://${remote.host}:${remote.port}/sendrawtransaction`,
-            data: {
-              tx_as_hex: txBlob,
-              do_not_relay: false,
-              do_sanity_checks: true,
-              blink: false
-            }
-          })
-        );
-        const response = submitted.data;
-        if (
-          !response ||
-          typeof response !== "object" ||
-          Array.isArray(response) ||
-          response.status !== "OK" ||
-          response.not_relayed === true ||
-          response.sanity_check_failed === true
-        ) {
-          continue;
+        try {
+          await this.queue.add(() =>
+            axios({
+              ...request,
+              url: `http://${remote.host}:${remote.port}/sendrawtransaction`,
+              data: {
+                tx_as_hex: txBlob,
+                do_not_relay: false,
+                do_sanity_checks: true,
+                blink: false
+              }
+            })
+          );
+        } catch (error) {
+          // A timed-out request may still have reached the remote node.
         }
-
         const confirmed = await this.queue.add(() =>
           axios({
             ...request,
@@ -788,6 +780,8 @@ export class Daemon {
         if (
           isDaemonTransactionsResponse(confirmed.data) &&
           confirmed.data.txs.length === 1 &&
+          typeof confirmed.data.txs[0].tx_hash === "string" &&
+          confirmed.data.txs[0].tx_hash.toLowerCase() === txid.toLowerCase() &&
           !(confirmed.data.missed_tx || []).some(
             hash => typeof hash === "string" && hash.toLowerCase() === txid
           )
