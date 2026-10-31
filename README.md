@@ -7,7 +7,7 @@ More information on the project can be found on the [website](https://www.judeco
 
 ### About this project
 
-This is the new Electron GUI for Judecoin. It is open source and completely free to use without restrictions, anyone may create an alternative implementation of the Judecoin Electron GUI that uses the protocol and network in a compatible manner.
+This is the Judecoin community desktop wallet for Windows and Linux. The GUI source code is available under the Apache License 2.0. You may use, modify, and redistribute it in accordance with that license.
 
 Please submit changes as pull requests to the `main` branch. Release tags are
 considered stable GUI builds.
