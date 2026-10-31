@@ -16,7 +16,7 @@ considered stable GUI builds.
 
 - Node.js version from `.nvmrc`
 - pnpm
-- Official Judecoin v4.0.0 `judecoind` and `judecoin-wallet-rpc` binaries for
+- Official Judecoin v4.1.0 `judecoind` and `judecoin-wallet-rpc` binaries for
   the target operating system
 
 #### Commands
